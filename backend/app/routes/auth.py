@@ -32,7 +32,7 @@ def register_user_route():
         db.session.add(new_user)
         db.session.commit()
         current_app.logger.info(f"New user registered: {username}")
-        return jsonify({"message": "User registered successfully.", "user": new_user.to_dict()}), 201
+        return jsonify({"message": "משתמש נרשם בהצלחה.", "user": new_user.to_dict()}), 201
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error during user registration for {username}: {str(e)}")
@@ -59,7 +59,7 @@ def login_user_route():
         # For this simplified auth, frontend will store credentials if needed for subsequent Basic Auth.
         # Backend just confirms success and returns user info.
         return jsonify({
-            "message": "User login successful.",
+            "message": "משתמש התחבר בהצלחה.",
             "user": user.to_dict(), # Contains id, username, email
             "role": "user"
         }), 200
@@ -86,7 +86,7 @@ def login_operator_route():
     if operator:
         current_app.logger.info(f"Operator '{operator.username}' logged in successfully.")
         return jsonify({
-            "message": "Operator login successful.",
+            "message": "מפעיל התחבר בהצלחה.",
             "operator": operator.to_dict(), # Contains id, username
             "role": "operator"
         }), 200

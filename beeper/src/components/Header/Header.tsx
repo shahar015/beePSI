@@ -5,9 +5,9 @@ import { Typography, Button, IconButton, Badge } from "@mui/material";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp"; // For logout
 import AccountCircleIcon from "@mui/icons-material/AccountCircle"; // For user/op icon
-import BeeperLogo from "../../../public/beeper.tsx";
 import { useStyles } from "./HeaderStyles";
 import { AppAuthState } from "../../types"; // For role type
+import BeeperLogo from "../../assets/beeper";
 
 interface HeaderProps {
   isAuthenticated: boolean;

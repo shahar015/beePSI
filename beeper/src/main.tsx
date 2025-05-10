@@ -7,12 +7,12 @@ import { theme } from "./theme";
 import { TssCacheProvider } from "tss-react";
 import createCache from "@emotion/cache";
 import { prefixer } from "stylis";
-import stylisRTLPlugin from "stylis-plugin-rtl";
+import rtlPlugin from "stylis-plugin-rtl";
 import { BrowserRouter } from "react-router-dom";
 
 const cacheRTL = createCache({
   key: "muirtl",
-  stylisPlugins: [prefixer, stylisRTLPlugin],
+  stylisPlugins: [prefixer, rtlPlugin],
 });
 
 const rootElement = document.getElementById("root");
