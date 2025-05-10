@@ -3,49 +3,29 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-# Corrected import for config: Use direct import as config.py is a sibling to the 'app' package directory
-# when run.py (also a sibling) is the entry point.
 from config import config_by_name, get_current_config, get_config_name, Config
 import os
 import logging
-from logging.handlers import RotatingFileHandler  # Optional: for better file logging
+from logging.handlers import RotatingFileHandler
 
-# Initialize extensions without app instance, they will be initialized in create_app
 db = SQLAlchemy()
 
-
-# CORS will be initialized in create_app to allow for app-specific configurations
 
 def create_app(config_name_override: str = None) -> Flask:
     """
     Application Factory Function.
     Creates and configures the Flask application instance.
-
-    Args:
-        config_name_override (str, optional): Specific configuration name to use
-                                             (e.g., 'testing'). Defaults to None,
-                                             which then uses FLASK_CONFIG or 'default'.
-    Returns:
-        Flask: The configured Flask application instance.
     """
-    # Use the override if provided, otherwise get from env/default
     effective_config_name = config_name_override if config_name_override else get_config_name()
-    # Ensure current_config_obj is an instance of Config or its subclasses
     current_config_obj: Config = config_by_name[effective_config_name]()
 
     app = Flask(__name__)
     app.config.from_object(current_config_obj)
 
-    # Initialize extensions with the app instance
     db.init_app(app)
-
-    # Configure CORS: Allow all origins from your frontend's development server
-    # For production, restrict this to your actual frontend domain.
     CORS(app, resources={r"/api/*": {"origins": "*"}})
 
-    # --- Logging Configuration ---
     if not app.debug and not app.testing:
-        # Production logging
         if not os.path.exists('logs'):
             try:
                 os.mkdir('logs')
@@ -65,11 +45,10 @@ def create_app(config_name_override: str = None) -> Flask:
 
         app.logger.setLevel(logging.INFO)
         app.logger.info(f'Strategic Beeper backend starting in {effective_config_name} mode')
-    else:  # Development or Testing
+    else:
         app.logger.setLevel(logging.DEBUG)
         app.logger.info(f'Strategic Beeper backend starting in {effective_config_name} (DEBUG) mode')
 
-    # --- Import and Register Blueprints ---
     from .routes.auth import auth_bp
     from .routes.shop import shop_bp
     from .routes.ops import ops_bp
@@ -78,7 +57,6 @@ def create_app(config_name_override: str = None) -> Flask:
     app.register_blueprint(shop_bp)
     app.register_blueprint(ops_bp)
 
-    # --- Database Initialization ---
     with app.app_context():
         from . import models
         try:
@@ -95,7 +73,6 @@ def create_app(config_name_override: str = None) -> Flask:
             app.logger.error(
                 "Please ensure your database server is running, accessible, and credentials in .env are correct.")
             app.logger.error(f"Attempted Database URI was: {app.config.get('SQLALCHEMY_DATABASE_URI', 'Not Set')}")
-
     return app
 
 
@@ -103,9 +80,6 @@ def seed_initial_data(app_instance: Flask) -> None:
     """
     Seeds initial data (Default Operator, BeeperModels) if the database is empty.
     This function should be called within an active Flask application context.
-
-    Args:
-        app_instance (Flask): The current Flask application instance.
     """
     from .models import Operator, BeeperModel
 
@@ -121,28 +95,29 @@ def seed_initial_data(app_instance: Flask) -> None:
 
         if BeeperModel.query.count() == 0:
             app_instance.logger.info("Seeding dummy beeper models...")
+            # Updated descriptions to Hebrew
             models_data = [
                 {'name': 'PagerOne Basic',
-                 'description': 'The reliable classic for everyday use. Features basic alphanumeric display and vibration alerts.',
-                 'price': 49.99, 'image_url': 'https://placehold.co/400x300/A0522D/FFFFFF?text=PagerOne&font=roboto'},
+                 'description': 'הקלאסיקה האמינה לשימוש יומיומי. כולל תצוגה אלפאנומרית בסיסית והתראות רטט.',
+                 'price': 49.99, 'image_url': 'https://csecrosscom.co.uk/wp-content/uploads/2020/06/GEO28V2-tilted.png'},
                 {'name': 'PagerX Pro',
-                 'description': 'Advanced features, robust encryption, and extended signal range. Ideal for professionals.',
-                 'price': 99.99, 'image_url': 'https://placehold.co/400x300/1E90FF/FFFFFF?text=PagerX+Pro&font=roboto'},
+                 'description': 'תכונות מתקדמות, הצפנה חזקה וטווח קליטה מורחב. אידיאלי לאנשי מקצוע.', 'price': 99.99,
+                 'image_url': 'https://gov.spok.com/wp-content/uploads/2022/05/02.png'},
                 {'name': 'StealthPager Mini',
-                 'description': 'Compact and discreet design with silent mode and subtle notifications. Perfect for covert operations.',
+                 'description': 'עיצוב קומפקטי ודיסקרטי עם מצב שקט והתראות עדינות. מושלם למבצעים חשאיים.',
                  'price': 75.50,
-                 'image_url': 'https://placehold.co/400x300/2F4F4F/FFFFFF?text=StealthMini&font=roboto'},
+                 'image_url': 'https://www.call-systems.com/fileadmin/uploads/cst/Products/Pagers/Staff/CST_W2028-Pager_300px.png'},
                 {'name': 'RuggedPager 5000',
-                 'description': 'Waterproof (IP68), shock-resistant, and built for extreme field conditions. Long battery life.',
+                 'description': 'עמיד למים (IP68), עמיד בזעזועים ומיועד לתנאי שטח קיצוניים. חיי סוללה ארוכים.',
                  'price': 120.00,
-                 'image_url': 'https://placehold.co/400x300/FF8C00/000000?text=Rugged5000&font=roboto'},
+                 'image_url': 'https://pngimg.com/d/pager_PNG23.png'},
                 {'name': 'MediPager Alert+',
-                 'description': 'Specifically designed for medical emergency notifications with priority channels and easy-to-use interface.',
-                 'price': 85.00, 'image_url': 'https://placehold.co/400x300/DC143C/FFFFFF?text=MediAlert+&font=roboto'},
+                 'description': 'תוכנן במיוחד להתראות חירום רפואיות עם ערוצים בעדיפות גבוהה וממשק קל לשימוש.',
+                 'price': 85.00, 'image_url': 'https://www.pwservice.com/images/minitor_7_front-550x550h.png'},
                 {'name': 'CommandoBeep Tactical',
-                 'description': 'Military-grade beeper with encrypted comms and GPS location ping (simulated).',
+                 'description': 'ביפר בדרגה צבאית עם תקשורת מוצפנת ויכולת איתור GPS (מדומיינת). מיועד לכוחות מיוחדים.',
                  'price': 150.00,
-                 'image_url': 'https://placehold.co/400x300/006400/FFFFFF?text=CommandoBeep&font=roboto'}
+                 'image_url': 'https://iplp.com/wp-content/uploads/2019/07/Gold-Alphanumeric-Pager-2871-3-400.png'}
             ]
             for data in models_data:
                 model = BeeperModel(**data)
@@ -157,4 +132,3 @@ def seed_initial_data(app_instance: Flask) -> None:
     except Exception as e:
         db.session.rollback()
         app_instance.logger.error(f"Error during initial data seeding: {str(e)}")
-

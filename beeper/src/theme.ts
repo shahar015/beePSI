@@ -139,6 +139,16 @@ export const theme = createTheme({
             backgroundColor: alpha(darkPalette.primary.light, 0.08), // Subtle purple background on hover
           },
         },
+        startIcon: {
+          // In RTL, startIcon is on the right. We want space to its left (before the text).
+          marginLeft: "8px", // Add 8px space to the left of the startIcon
+          marginRight: "-4px", // MUI default is -4px (sizeMedium), adjust if needed
+        },
+        endIcon: {
+          // In RTL, endIcon is on the left. We want space to its right (before the text).
+          marginRight: "8px", // Add 8px space to the right of the endIcon
+          marginLeft: "-4px", // MUI default is -4px (sizeMedium), adjust if needed
+        },
       },
     },
     MuiTextField: {

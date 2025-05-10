@@ -159,7 +159,7 @@ def purchase_beepers_route(current_user_obj: User):
         # For simplicity, we'll return a success message.
         # To return purchased_beepers_info, you'd need to .to_dict() them *after* commit or flush carefully.
         return jsonify({
-            "message": "Purchase successful! Your beepers are 'on their way'. Cart has been cleared.",
+            "message": "רכישה בוצעה בהצלחה! הביפרים שלך בדרך.",
             "items_purchased_count": len(user_cart_items) # This is count of cart entries, not total beeper units
         }), 201
 
