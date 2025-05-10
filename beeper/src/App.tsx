@@ -1,205 +1,398 @@
-import createCache from "@emotion/cache";
-import { CacheProvider } from "@emotion/react";
+// src/App.tsx
+import React, { useState, useEffect, useCallback } from "react";
 import {
-  Box,
-  Container,
-  CssBaseline,
-  ThemeProvider,
-  createTheme,
+  Routes,
+  Route,
+  Navigate,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
+import {
+  Snackbar,
+  Alert as MuiAlert,
+  CircularProgress,
+  Typography,
 } from "@mui/material";
-import { useState } from "react";
-import { prefixer } from "stylis";
-import rtlPlugin from "stylis-plugin-rtl";
-import Footer from "./components/Footer";
-import Header from "./components/Header"; // ודא נתיבים
-import CartPage from "./pages/CartPage";
-import FavoritesPage from "./pages/FavoritesPage";
-import LoginPage from "./pages/LoginPage";
-import OpsDashboardPage from "./pages/OpsDashboardPage";
-import ShopPage from "./pages/ShopPage";
-import { purchaseBeepers } from "./services/api";
-import { BeeperModel, CartItem } from "./types";
+import { Header } from "./components/Header/Header";
+import { PagerShop } from "./pages/PagerShop/PagerShop";
+import { OpsCenter } from "./pages/OpsCenter/OpsCenter";
+import { LoginPage } from "./pages/LoginPage/LoginPage";
+import { RegisterPage } from "./pages/RegisterPage/RegisterPage";
+import { CartPage } from "./pages/CartPage/CartPage";
+import { ProtectedRoute } from "./components/ProtectedRoute/ProtectedRoute";
+import {
+  AppAuthState,
+  CartItem,
+  UserData,
+  OperatorData,
+  BeeperModel,
+  SnackbarSeverity,
+  BackendCartItem,
+} from "./types";
+import {
+  loginOperator as apiLoginOperator,
+  loginUser as apiLoginUser,
+  registerUser as apiRegisterUser,
+  getCart as apiGetCart,
+  addToCart as apiAddToCart,
+  removeFromCart as apiRemoveFromCart,
+  updateCartItemQuantity as apiUpdateCartItemQuantity,
+  purchaseBeepersFromCart as apiPurchaseBeepersFromCart,
+  getBeeperModels as apiGetBeeperModels,
+} from "./services/api";
+import { useStyles } from "./AppStyles";
 
-// Create rtl cache
-const rtlCache = createCache({
-  key: "muirtl",
-  stylisPlugins: [prefixer, rtlPlugin],
-});
+const initialAuthState: AppAuthState = {
+  isAuthenticated: false,
+  isLoading: false,
+  credentials: null,
+  role: null,
+  loggedInEntityDetails: null,
+};
 
-// הגדרת ערכת נושא בסיסית (ניתן להרחיב ולהתאים אישית)
-const theme = createTheme({
-  direction: "rtl",
-  palette: {
-    mode: "dark", // ערכת נושא כהה למראה מודרני/צבאי
-    primary: {
-      main: "#6600CC", // צבע הדגשה (טורקיז/ציאן)
+const transformBackendCartToFrontend = (
+  backendCart: BackendCartItem[] | null
+): CartItem[] => {
+  if (!backendCart) return [];
+  return backendCart.map((item) => ({
+    id: item.model_details.id,
+    name: item.model_details.name,
+    description: item.model_details.description,
+    price: item.model_details.price,
+    image_url: item.model_details.image_url,
+    quantity: item.quantity,
+  }));
+};
+
+const App: React.FC = () => {
+  const { classes } = useStyles();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [authState, setAuthState] = useState<AppAuthState>(initialAuthState);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartLoading, setCartLoading] = useState<boolean>(false);
+  const [beeperModels, setBeeperModels] = useState<BeeperModel[]>([]);
+  const [shopLoading, setShopLoading] = useState<boolean>(true);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] =
+    useState<SnackbarSeverity>("info");
+
+  const openSnackbar = useCallback(
+    (message: string, severity: SnackbarSeverity = "info") => {
+      setSnackbarMessage(message);
+      setSnackbarSeverity(severity);
+      setSnackbarOpen(true);
     },
-    secondary: {
-      main: "#ffab40", // צבע משני (כתום)
-    },
-    background: {
-      default: "#121212", // רקע כהה
-      paper: "#1e1e1e", // רקע לקומפוננטות כמו קארדים
-    },
-  },
-  typography: {
-    fontFamily: "system-ui, sans-serif", // פונט מודרני
-  },
-});
+    []
+  );
 
-function App() {
-  // ניהול מצב ראשי
-  const [currentPage, setCurrentPage] = useState<string>("/shop"); // ניהול ניווט
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [credentials, setCredentials] = useState<{
-    user: string;
-    pass: string;
-  } | null>(null); // null = not logged in
-  const [checkoutState, setCheckoutState] = useState<{
-    loading: boolean;
-    error: string | null;
-    success: boolean;
-  }>({
-    loading: false,
-    error: null,
-    success: false,
-  });
+  const handleSnackbarClose = (
+    _event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
 
-  // פונקציות לניהול עגלה
-  const addToCart = (modelToAdd: BeeperModel) => {
-    setCart((prevCart) => {
-      const existingItem = prevCart.find((item) => item.id === modelToAdd.id);
-      if (existingItem) {
-        // הגדל כמות
-        return prevCart.map((item) =>
-          item.id === modelToAdd.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
+  const fetchCartItems = useCallback(
+    async (credentials: AppAuthState["credentials"]) => {
+      if (authState.role === "user" && credentials) {
+        setCartLoading(true);
+        try {
+          const backendCart = await apiGetCart(credentials);
+          setCartItems(transformBackendCartToFrontend(backendCart || []));
+        } catch (err) {
+          const error = err as Error;
+          openSnackbar(error.message || "Failed to fetch cart.", "error");
+          setCartItems([]);
+        } finally {
+          setCartLoading(false);
+        }
       } else {
-        // הוסף פריט חדש
-        return [...prevCart, { ...modelToAdd, quantity: 1 }];
+        setCartItems([]);
       }
-    });
-    setCheckoutState({ loading: false, error: null, success: false }); // אפס סטטוס רכישה
-  };
+    },
+    [authState.role, openSnackbar]
+  );
 
-  const updateCartQuantity = (modelId: number, quantity: number) => {
-    setCart((prevCart) =>
-      prevCart.map((item) =>
-        item.id === modelId ? { ...item, quantity: quantity } : item
-      )
-    );
-  };
-
-  const removeFromCart = (modelId: number) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== modelId));
-  };
-
-  // פונקציית רכישה
-  const handleCheckout = async () => {
-    setCheckoutState({ loading: true, error: null, success: false });
-    try {
-      const itemsToPurchase = cart.map((item) => ({
-        model_id: item.id,
-        quantity: item.quantity,
-      }));
-      await purchaseBeepers(itemsToPurchase);
-      setCart([]); // רוקן עגלה
-      setCheckoutState({ loading: false, error: null, success: true });
-    } catch (err: any) {
-      setCheckoutState({
-        loading: false,
-        error: err.message || "Purchase failed",
-        success: false,
+  const handleLoginSuccess = useCallback(
+    (
+      creds: { username: string; password_plaintext: string },
+      entityDetails: UserData | OperatorData,
+      role: "user" | "operator"
+    ) => {
+      setAuthState({
+        isAuthenticated: true,
+        isLoading: false,
+        credentials: creds,
+        role: role,
+        loggedInEntityDetails: entityDetails,
       });
-    }
-  };
-
-  // פונקציות ניהול הזדהות
-  const handleLoginSuccess = (creds: { user: string; pass: string }) => {
-    setCredentials(creds);
-    setCurrentPage("/ops/dashboard"); // נווט ללוח הבקרה
-  };
-
-  const handleLogout = () => {
-    setCredentials(null);
-    setCurrentPage("/shop"); // חזור לחנות
-  };
-
-  // ניווט
-  const navigate = (page: string) => {
-    // אם מנסים לגשת לדף מוגן ולא מחוברים, הפנה לכניסה
-    if (page.startsWith("/ops/") && page !== "/ops/login" && !credentials) {
-      setCurrentPage("/ops/login");
-    } else {
-      setCurrentPage(page);
-      // אפס סטטוס רכישה במעבר עמוד
-      if (page !== "/cart") {
-        setCheckoutState({ loading: false, error: null, success: false });
+      openSnackbar("Login successful!", "success");
+      if (role === "user") {
+        fetchCartItems(creds);
+        const from = location.state?.from?.pathname || "/";
+        navigate(from, { replace: true });
+      } else if (role === "operator") {
+        setCartItems([]);
+        navigate("/ops-center");
       }
+    },
+    [navigate, openSnackbar, location.state, fetchCartItems]
+  );
+
+  const handleLogout = useCallback(() => {
+    setAuthState(initialAuthState);
+    setCartItems([]);
+    openSnackbar("Logged out successfully.", "info");
+    navigate("/login");
+  }, [navigate, openSnackbar]);
+
+  useEffect(() => {
+    if (authState.role === "user" && authState.credentials) {
+      fetchCartItems(authState.credentials);
+    } else if (!authState.isAuthenticated) {
+      setCartItems([]);
+    }
+  }, [
+    authState.credentials,
+    authState.role,
+    authState.isAuthenticated,
+    fetchCartItems,
+  ]);
+
+  const handleAddToCart = async (model: BeeperModel, quantity: number) => {
+    if (
+      !authState.isAuthenticated ||
+      authState.role !== "user" ||
+      !authState.credentials
+    ) {
+      openSnackbar(
+        "Please log in as a user to add items to your cart.",
+        "warning"
+      );
+      navigate("/login");
+      return;
+    }
+    setCartLoading(true); // Use general cart loading
+    try {
+      await apiAddToCart(model.id, quantity, authState.credentials);
+      await fetchCartItems(authState.credentials); // Refetch entire cart
+      openSnackbar(`${model.name} added to cart!`, "success");
+    } catch (err) {
+      const error = err as Error;
+      openSnackbar(error.message || "Failed to add item to cart.", "error");
+    } finally {
+      setCartLoading(false);
     }
   };
 
-  // קביעת איזה עמוד להציג
-  const renderPage = () => {
-    switch (currentPage) {
-      case "/shop":
-        return <ShopPage onAddToCart={addToCart} credentials={credentials} />;
-      case "/favorites":
-        return (
-          <FavoritesPage onAddToCart={addToCart} credentials={credentials} />
-        );
-      case "/cart":
-        return (
-          <CartPage
-            cartItems={cart}
-            onUpdateQuantity={updateCartQuantity}
-            onRemoveItem={removeFromCart}
-            onCheckout={handleCheckout}
-            checkoutLoading={checkoutState.loading}
-            checkoutError={checkoutState.error}
-            checkoutSuccess={checkoutState.success}
-          />
-        );
-      case "/ops/login":
-        // אם כבר מחובר, הפנה לדשבורד
-        if (credentials) {
-          navigate("/ops/dashboard");
-          return null; // או הצג את הדשבורד ישירות
-        }
-        return <LoginPage onLoginSuccess={handleLoginSuccess} />;
-      case "/ops/dashboard":
-        if (!credentials) {
-          navigate("/ops/login"); // אם לא מחובר, הפנה לכניסה
-          return null;
-        }
-        return <OpsDashboardPage credentials={credentials} />;
-      default:
-        return <ShopPage onAddToCart={addToCart} credentials={credentials} />; // דף ברירת מחדל
+  const handleRemoveFromCart = async (modelId: number) => {
+    if (
+      !authState.isAuthenticated ||
+      authState.role !== "user" ||
+      !authState.credentials
+    )
+      return;
+    setCartLoading(true);
+    try {
+      await apiRemoveFromCart(modelId, authState.credentials);
+      await fetchCartItems(authState.credentials); // Refetch entire cart
+      openSnackbar("Item removed from cart.", "info");
+    } catch (err) {
+      const error = err as Error;
+      openSnackbar(
+        error.message || "Failed to remove item from cart.",
+        "error"
+      );
+    } finally {
+      setCartLoading(false);
     }
   };
+
+  const handleUpdateCartQuantity = async (
+    modelId: number,
+    newQuantity: number
+  ) => {
+    if (
+      !authState.isAuthenticated ||
+      authState.role !== "user" ||
+      !authState.credentials
+    )
+      return;
+    if (newQuantity < 1) {
+      handleRemoveFromCart(modelId);
+      return;
+    }
+    setCartLoading(true);
+    try {
+      await apiUpdateCartItemQuantity(
+        modelId,
+        newQuantity,
+        authState.credentials
+      );
+      await fetchCartItems(authState.credentials); // Refetch entire cart
+      openSnackbar("Cart quantity updated.", "success");
+    } catch (err) {
+      const error = err as Error;
+      openSnackbar(error.message || "Failed to update cart quantity.", "error");
+    } finally {
+      setCartLoading(false);
+    }
+  };
+
+  const handlePurchase = async () => {
+    if (
+      !authState.isAuthenticated ||
+      authState.role !== "user" ||
+      !authState.credentials
+    ) {
+      openSnackbar("Please log in to complete your purchase.", "warning");
+      navigate("/login");
+      return;
+    }
+    if (cartItems.length === 0) {
+      openSnackbar("Your cart is empty.", "info");
+      return;
+    }
+    setCartLoading(true);
+    try {
+      const response = await apiPurchaseBeepersFromCart(authState.credentials);
+      openSnackbar(response.message || "Purchase successful!", "success");
+      await fetchCartItems(authState.credentials);
+    } catch (err) {
+      const error = err as Error;
+      openSnackbar(error.message || "Purchase failed.", "error");
+    } finally {
+      setCartLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const fetchModels = async () => {
+      setShopLoading(true);
+      try {
+        const models = await apiGetBeeperModels();
+        setBeeperModels(models);
+      } catch (err) {
+        const error = err as Error;
+        openSnackbar(error.message || "Failed to load beeper models.", "error");
+      } finally {
+        setShopLoading(false);
+      }
+    };
+    fetchModels();
+  }, [openSnackbar]);
+
+  if (authState.isLoading) {
+    return (
+      <div className={classes.loadingContainer}>
+        <CircularProgress />
+        <Typography>Authenticating...</Typography>
+      </div>
+    );
+  }
 
   return (
-    <CacheProvider value={rtlCache}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline /> {/* איפוס עיצובי דפדפן בסיסיים */}
-        <Box sx={{ display: "flex", flexDirection: "column", height: "100vh" }}>
-          <Header
-            isOpsCenter={currentPage.startsWith("/ops/")}
-            cartItemCount={cart.reduce((sum, item) => sum + item.quantity, 0)}
-            onNavigate={navigate}
-            onLogout={handleLogout}
-            isLoggedIn={!!credentials}
+    <div className={classes.appRoot}>
+      <Header
+        isAuthenticated={authState.isAuthenticated}
+        username={authState.loggedInEntityDetails?.username || null}
+        role={authState.role}
+        onLogout={handleLogout}
+        cartItemCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}
+      />
+      <main className={classes.mainContent}>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <PagerShop
+                beeperModels={beeperModels}
+                loading={shopLoading}
+                onAddToCart={handleAddToCart}
+                openSnackbar={openSnackbar}
+              />
+            }
           />
-          <Container component="main" sx={{ flexGrow: 1 }}>
-            {renderPage()}
-          </Container>
-          <Footer />
-        </Box>
-      </ThemeProvider>
-    </CacheProvider>
+          <Route
+            path="/login"
+            element={
+              <LoginPage
+                onLoginSuccess={handleLoginSuccess}
+                openSnackbar={openSnackbar}
+                apiLoginUser={apiLoginUser}
+                apiLoginOperator={apiLoginOperator}
+              />
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <RegisterPage
+                openSnackbar={openSnackbar}
+                apiRegisterUser={apiRegisterUser}
+              />
+            }
+          />
+          <Route
+            path="/ops-center"
+            element={
+              <ProtectedRoute
+                isAuthenticated={authState.isAuthenticated}
+                userRole={authState.role}
+                requiredRole="operator"
+              >
+                <OpsCenter
+                  operatorCredentials={authState.credentials}
+                  openSnackbar={openSnackbar}
+                />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cart"
+            element={
+              <ProtectedRoute
+                isAuthenticated={authState.isAuthenticated}
+                userRole={authState.role}
+                requiredRole="user"
+              >
+                <CartPage
+                  cartItems={cartItems}
+                  cartLoading={cartLoading} // General cart loading state
+                  // itemUpdatingId prop removed
+                  onRemoveItem={handleRemoveFromCart}
+                  onUpdateQuantity={handleUpdateCartQuantity}
+                  onPurchase={handlePurchase}
+                />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <MuiAlert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </MuiAlert>
+      </Snackbar>
+    </div>
   );
-}
+};
 
 export default App;
