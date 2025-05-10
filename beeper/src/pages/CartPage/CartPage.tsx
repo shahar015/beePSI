@@ -115,7 +115,7 @@ export const CartPage: React.FC<CartPageProps> = ({
       <div className={classes.loadingContainer}>
         <CircularProgress size={50} />
         <Typography variant="h6" sx={{ mt: 2 }}>
-          Loading Your Cart...
+          טוענים את העגלה שלך...
         </Typography>
       </div>
     );
@@ -129,19 +129,18 @@ export const CartPage: React.FC<CartPageProps> = ({
             sx={{ fontSize: 80, color: "text.disabled" }}
           />
           <Typography variant="h5" component="h1" gutterBottom>
-            Your Cart is Empty
+            העגלה שלך ריקה
           </Typography>
           <Typography color="textSecondary">
-            Time to load up on some strategic beepers!
+            זמן לבקר בחנות הביפרים שלנו!
           </Typography>
           <Button
             variant="contained"
             color="primary"
             component={RouterLink}
             to="/"
-            sx={{ mt: 3, px: 4, py: 1.5 }}
           >
-            Browse Beeper Models
+            לחנות הביפרים
           </Button>
         </div>
       </div>
@@ -151,7 +150,7 @@ export const CartPage: React.FC<CartPageProps> = ({
   return (
     <div className={classes.cartRoot}>
       <Typography variant="h3" component="h1" className={classes.pageTitle}>
-        Your Strategic Arsenal
+        עגלת הקניות שלך
       </Typography>
 
       <div className={classes.cartItemsContainer}>
@@ -178,7 +177,7 @@ export const CartPage: React.FC<CartPageProps> = ({
                 {item.name}
               </Typography>
               <Typography variant="body2" className={classes.itemPrice}>
-                ${item.price.toFixed(2)} each
+                מחיר לפריט: {item.price.toFixed(2)} ש"ח
               </Typography>
             </div>
             <div className={classes.itemQuantityContainer}>
@@ -196,7 +195,7 @@ export const CartPage: React.FC<CartPageProps> = ({
                   textAlign: "right",
                 }}
               >
-                Subtotal: ${(item.price * item.quantity).toFixed(2)}
+                סה"כ: {(item.price * item.quantity).toFixed(2)} ש"ח
               </Typography>
             </div>
             <IconButton
@@ -214,23 +213,23 @@ export const CartPage: React.FC<CartPageProps> = ({
 
       <Paper className={classes.summaryContainer} elevation={4}>
         <Typography variant="h5" gutterBottom>
-          Order Summary
+          סיכום הזמנה
         </Typography>
         <div className={classes.summaryRow}>
-          <Typography variant="body1">Total Items:</Typography>
+          <Typography variant="body1">כמות פריטים:</Typography>
           <Typography variant="body1">{totalItems}</Typography>
         </div>
         <div className={classes.summaryRow}>
-          <Typography variant="body1">Subtotal:</Typography>
-          <Typography variant="body1">${subtotal.toFixed(2)}</Typography>
+          <Typography variant="body1">סיכום ביניים: </Typography>
+          <Typography variant="body1">{subtotal.toFixed(2)} ש"ח</Typography>
         </div>
         <Divider sx={{ my: 1 }} />
         <div className={classes.summaryRow}>
           <Typography variant="h6" className={classes.totalPrice}>
-            Grand Total:
+            מחיר סופי:
           </Typography>
           <Typography variant="h6" className={classes.totalPrice}>
-            ${total.toFixed(2)}
+            {total.toFixed(2)} ש"ח
           </Typography>
         </div>
         <Button
@@ -248,7 +247,7 @@ export const CartPage: React.FC<CartPageProps> = ({
             )
           }
         >
-          {cartLoading ? "Processing Purchase..." : "Deploy Arsenal (Checkout)"}
+          {cartLoading ? "רכישה מתבצעת..." : "ביצוע רכישה"}
         </Button>
       </Paper>
     </div>

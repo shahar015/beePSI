@@ -51,7 +51,7 @@ export const PagerShop: React.FC<PagerShopProps> = ({
     content = (
       <div className={classes.loadingOrErrorContainer}>
         <CircularProgress size={60} />
-        <Typography variant="h6">Loading Beepers...</Typography>
+        <Typography variant="h6">טוען ביפרים...</Typography>
       </div>
     );
   } else if (beeperModels.length === 0 && !loading) {
@@ -59,7 +59,7 @@ export const PagerShop: React.FC<PagerShopProps> = ({
     content = (
       <div className={classes.loadingOrErrorContainer}>
         <Typography variant="h6" color="textSecondary">
-          No beeper models currently available. Please check back later.
+          אין ביפרים זמינים כרגע. אנא בדוק מאוחר יותר.
         </Typography>
       </div>
     );
@@ -67,7 +67,7 @@ export const PagerShop: React.FC<PagerShopProps> = ({
     content = (
       <div className={classes.loadingOrErrorContainer}>
         <Typography variant="h6" className={classes.noResultsText}>
-          No beepers found matching "{searchTerm}". Try a different search.
+          אין ביפרים התואמים לחיפוש "{searchTerm}". נסה חיפוש אחר.
         </Typography>
       </div>
     );
@@ -90,24 +90,25 @@ export const PagerShop: React.FC<PagerShopProps> = ({
   return (
     <div className={classes.shopRoot}>
       <Typography variant="h3" component="h1" className={classes.pageTitle}>
-        Beeper Arsenal Catalog
+        קטלוג ביפרים למכירה
       </Typography>
       <div className={classes.searchAndFilterContainer}>
         <TextField
           className={classes.searchField}
           variant="outlined"
-          placeholder="Search by name or description..."
+          placeholder="חפש לפי שם דגם או תיאור..."
           value={searchTerm}
           onChange={handleSearchChange}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon color="action" />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="action" />
+                </InputAdornment>
+              ),
+            },
           }}
         />
-        {/* Future: Add filter/sort dropdowns here */}
       </div>
       {content}
     </div>

@@ -54,11 +54,11 @@ export const BeeperCard: React.FC<BeeperCardProps> = ({
           className={classes.description}
           title={beeper.description || ""}
         >
-          {beeper.description || "No description available."}
+          {beeper.description || "אין תיאור זמין."}
         </Typography>
         <div className={classes.priceAndActionContainer}>
           <Typography variant="h6" className={classes.price}>
-            ${beeper.price.toFixed(2)}
+            {beeper.price.toFixed(2)} ש"ח
           </Typography>
           <Button
             variant="contained"
@@ -68,7 +68,7 @@ export const BeeperCard: React.FC<BeeperCardProps> = ({
             onClick={handleAddToCartClick}
             className={classes.addToCartButton}
           >
-            Add to Cart
+            הוסף לעגלה
           </Button>
         </div>
       </div>

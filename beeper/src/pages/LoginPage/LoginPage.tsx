@@ -13,8 +13,6 @@ import {
 } from "@mui/material";
 import { UserData, OperatorData, SnackbarSeverity } from "../../types";
 import { useStyles } from "./LoginPageStyles";
-// These API functions are passed as props from App.tsx
-// import { loginUser as apiLoginUser, loginOperator as apiLoginOperator } from '../../services/api';
 
 interface LoginPageProps {
   onLoginSuccess: (
@@ -23,7 +21,6 @@ interface LoginPageProps {
     role: "user" | "operator"
   ) => void;
   openSnackbar: (message: string, severity?: SnackbarSeverity) => void;
-  // Pass the actual API functions as props
   apiLoginUser: (
     identifier: string,
     password_plaintext: string
@@ -53,15 +50,15 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     setError(null);
 
     if (!identifier.trim() || !password.trim()) {
-      setError("Username/Email and password cannot be empty.");
-      openSnackbar("Username/Email and password cannot be empty.", "warning");
+      setError("שם משתמש/ סיסמה לא יכולים להיות ריקים");
+      openSnackbar("שם משתמש/סיסמה לא יכולים להיות ריקים", "warning");
       setLoading(false);
       return;
     }
 
     try {
       if (isOperatorLogin) {
-        const response = await apiLoginOperator(identifier, password); // 'identifier' used as username for operator
+        const response = await apiLoginOperator(identifier, password);
         onLoginSuccess(
           { username: identifier, password_plaintext: password },
           response.operator,
@@ -78,8 +75,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     } catch (err) {
       const error = err as Error; // Cast to Error type
       const errorMessage =
-        error.message ||
-        "Login failed. Please check your credentials or try again later.";
+        error.message || "התחברות נכשלה. שם משתמש או סיסמה שגויים.";
       setError(errorMessage);
       openSnackbar(errorMessage, "error");
     } finally {
@@ -91,7 +87,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
     <div className={classes.loginRoot}>
       <div className={classes.formContainer}>
         <Typography variant="h4" component="h1" className={classes.title}>
-          {isOperatorLogin ? "Operator Login" : "User Login"}
+          {isOperatorLogin ? "התחברות מפעיל" : "התחברות משתמש"}
         </Typography>
 
         {error && (
@@ -102,7 +98,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
 
         <form onSubmit={handleSubmit} noValidate>
           <TextField
-            label={isOperatorLogin ? "Operator Username" : "Username or Email"}
+            label={isOperatorLogin ? "שם משתמש מפעיל" : "שם משתמש/ אימייל"}
             variant="outlined"
             margin="normal"
             required
@@ -117,7 +113,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
             className={classes.textField}
           />
           <TextField
-            label="Password"
+            label="סיסמה"
             variant="outlined"
             margin="normal"
             required
@@ -142,7 +138,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({
                   color="primary"
                 />
               }
-              label="Login as Operator"
+              label="התחבר כמפעיל"
             />
           </div>
 
@@ -157,13 +153,13 @@ export const LoginPage: React.FC<LoginPageProps> = ({
               loading ? <CircularProgress size={20} color="inherit" /> : null
             }
           >
-            {loading ? "Signing In..." : "Sign In"}
+            {loading ? "מתחבר..." : "התחבר"}
           </Button>
 
           {!isOperatorLogin && ( // Show register link only for user login
             <div className={classes.linksContainer}>
               <Link component={RouterLink} to="/register" variant="body2">
-                {"Don't have an account? Sign Up"}
+                {"אין לך משתמש? הירשם כאן"}
               </Link>
             </div>
           )}
