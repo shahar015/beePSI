@@ -41,10 +41,7 @@ export const OpsCenter: React.FC<OpsCenterProps> = ({
 
   const fetchBeepers = useCallback(async () => {
     if (!operatorCredentials) {
-      openSnackbar(
-        "Operator credentials not available. Cannot fetch data.",
-        "error"
-      );
+      openSnackbar("פרטי התחברות של המפעיל אינם נכונים.", "error");
       setLoading(false);
       return;
     }
@@ -54,7 +51,7 @@ export const OpsCenter: React.FC<OpsCenterProps> = ({
       setBeepers(data || []);
     } catch (err) {
       const error = err as Error;
-      openSnackbar(error.message || "Failed to fetch sold beepers.", "error");
+      openSnackbar(error.message || "קבלת ביפרים נכשלה.", "error");
       setBeepers([]);
     } finally {
       setLoading(false);
@@ -97,14 +94,11 @@ export const OpsCenter: React.FC<OpsCenterProps> = ({
 
   const handleActivateSelected = async () => {
     if (selectedBeeperIds.length === 0) {
-      openSnackbar("Please select at least one beeper to activate.", "warning");
+      openSnackbar("אנא בחר לפחות ביפר אחד להפעלה.", "warning");
       return;
     }
     if (!operatorCredentials) {
-      openSnackbar(
-        "Authentication error: Operator credentials missing.",
-        "error"
-      );
+      openSnackbar("פרטי התחברות של מפעיל חסרים.", "error");
       return;
     }
     setActivating(true);
@@ -114,23 +108,22 @@ export const OpsCenter: React.FC<OpsCenterProps> = ({
         operatorCredentials
       );
       const activatedCount = response.activated_ids?.length || 0;
-      let message =
-        response.message || `${activatedCount} beeper(s) processed.`;
+      let message = response.message || `${activatedCount} ביפרים הופעלו.`;
 
       if (response.errors && response.errors.length > 0) {
-        message += ` Issues: ${response.errors.join(", ")}`;
+        message += ` בעיות: ${response.errors.join(", ")}`;
         openSnackbar(message, activatedCount > 0 ? "warning" : "error");
       } else if (activatedCount > 0) {
         openSnackbar(message, "success");
       } else {
-        openSnackbar(message || "No beepers were activated.", "info");
+        openSnackbar(message || "אף ביפר לא הופעל.", "info");
       }
 
       fetchBeepers();
       setSelectedBeeperIds([]);
     } catch (err) {
       const error = err as Error;
-      openSnackbar(error.message || "Failed to activate beepers.", "error");
+      openSnackbar(error.message || "כשל בהפעלת הביפרים.", "error");
     } finally {
       setActivating(false);
     }
@@ -154,7 +147,7 @@ export const OpsCenter: React.FC<OpsCenterProps> = ({
     return (
       <div className={classes.loadingOrErrorContainer}>
         <CircularProgress size={50} />
-        <Typography variant="h6">Loading Beeper Data...</Typography>
+        <Typography variant="h6">טוען מידע ביפרים...</Typography>
       </div>
     );
   }
@@ -162,7 +155,7 @@ export const OpsCenter: React.FC<OpsCenterProps> = ({
   return (
     <div className={classes.opsCenterRoot}>
       <Typography variant="h4" component="h1" className={classes.title}>
-        Ops Command & Control
+        לוח בקרה מפעילים
       </Typography>
 
       <div className={classes.controlBar}>
@@ -173,12 +166,14 @@ export const OpsCenter: React.FC<OpsCenterProps> = ({
           size="small"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon color="action" />
-              </InputAdornment>
-            ),
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon color="action" />
+                </InputAdornment>
+              ),
+            },
           }}
         />
         <Button
@@ -195,8 +190,8 @@ export const OpsCenter: React.FC<OpsCenterProps> = ({
           }
         >
           {activating
-            ? "Activating..."
-            : `Activate Selected (${selectedBeeperIds.length})`}
+            ? "מפעיל..."
+            : `הפעל נבחרים (${selectedBeeperIds.length})`}
         </Button>
       </div>
 
@@ -204,8 +199,8 @@ export const OpsCenter: React.FC<OpsCenterProps> = ({
         <div className={classes.loadingOrErrorContainer}>
           <Typography variant="h6" color="textSecondary">
             {searchTerm
-              ? `No beepers found matching "${searchTerm}".`
-              : "No beepers have been sold yet."}
+              ? `לא נמצאו ביפרים המתאימים לחיפוש "${searchTerm}".`
+              : "אין ביפרים שנמכרו."}
           </Typography>
         </div>
       )}
@@ -234,15 +229,11 @@ export const OpsCenter: React.FC<OpsCenterProps> = ({
                     inputProps={{ "aria-label": "select all beepers" }}
                   />
                 </TableCell>
-                <TableCell className={classes.tableCell}>
-                  Beeper Unit ID
-                </TableCell>
-                <TableCell className={classes.tableCell}>Model</TableCell>
-                <TableCell className={classes.tableCell}>
-                  Purchase Time
-                </TableCell>
-                <TableCell className={classes.tableCell}>User ID</TableCell>
-                <TableCell className={classes.tableCell}>Status</TableCell>
+                <TableCell className={classes.tableCell}>מזהה ביפר</TableCell>
+                <TableCell className={classes.tableCell}>דגם</TableCell>
+                <TableCell className={classes.tableCell}>מועד קנייה</TableCell>
+                <TableCell className={classes.tableCell}>מזהה משתמש</TableCell>
+                <TableCell className={classes.tableCell}>סטטוס</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>

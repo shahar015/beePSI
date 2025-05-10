@@ -43,20 +43,20 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
       !password.trim() ||
       !confirmPassword.trim()
     ) {
-      setFormError("All fields are required.");
+      setFormError("כל השדות הם חובה.");
       return false;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setFormError("Please enter a valid email address.");
+      setFormError("בבקשה הכנס אימייל תקין.");
       return false;
     }
     if (password.length < 6) {
-      setFormError("Password must be at least 6 characters long.");
+      setFormError("סייסמה חייבת להכיל לפחות 6 תווים.");
       return false;
     }
     if (password !== confirmPassword) {
-      setFormError("Passwords do not match.");
+      setFormError("סיסמאות לא תואמות.");
       return false;
     }
     setFormError(null); // Clear previous validation errors
@@ -75,7 +75,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
     try {
       const response = await apiRegisterUser(username, email, password);
       openSnackbar(
-        response.message || "Registration successful! Please log in.",
+        response.message || "הרשמה בוצעה בהצלחה. אנא התחבר.",
         "success"
       );
       navigate("/login"); // Redirect to login page after successful registration
@@ -84,7 +84,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
       const errorMessage =
         (error as ApiErrorResponse).error ||
         (error as Error).message ||
-        "Registration failed. Please try again.";
+        "הרשמה נכשלה. אנא נסה שוב.";
       setFormError(errorMessage); // Display error in the form's alert
       openSnackbar(errorMessage, "error");
     } finally {
@@ -96,7 +96,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
     <div className={classes.registerRoot}>
       <div className={classes.formContainer}>
         <Typography variant="h4" component="h1" className={classes.title}>
-          Create Account
+          צור חשבון
         </Typography>
 
         {formError && (
@@ -111,7 +111,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
 
         <form onSubmit={handleSubmit} noValidate>
           <TextField
-            label="Username"
+            label="שם משתמש"
             variant="outlined"
             margin="normal"
             required
@@ -129,7 +129,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
             } // Example specific field error highlight
           />
           <TextField
-            label="Email Address"
+            label="אימייל"
             variant="outlined"
             margin="normal"
             required
@@ -145,7 +145,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
             error={!!(formError && formError.toLowerCase().includes("email"))}
           />
           <TextField
-            label="Password"
+            label="סיסמה"
             variant="outlined"
             margin="normal"
             required
@@ -158,7 +158,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
             onChange={(e) => setPassword(e.target.value)}
             disabled={loading}
             className={classes.textField}
-            helperText="Password must be at least 6 characters."
+            helperText="סיסמה חייבת להכיל לפחות 6 תווים."
             error={
               !!(
                 formError &&
@@ -168,7 +168,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
             }
           />
           <TextField
-            label="Confirm Password"
+            label="אימות סיסמה"
             variant="outlined"
             margin="normal"
             required
@@ -194,11 +194,11 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
               loading ? <CircularProgress size={20} color="inherit" /> : null
             }
           >
-            {loading ? "Registering..." : "Register"}
+            {loading ? "הרשמה מתבצעת..." : "הירשם"}
           </Button>
           <div className={classes.linksContainer}>
             <Link component={RouterLink} to="/login" variant="body2">
-              {"Already have an account? Sign In"}
+              {"כבר יש לך חשבון? התחבר כאן"}
             </Link>
           </div>
         </form>

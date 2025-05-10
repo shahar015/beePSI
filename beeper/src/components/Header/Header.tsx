@@ -52,7 +52,7 @@ export const Header: React.FC<HeaderProps> = ({
           component={NavLink}
           to="/"
         >
-          Shop
+          חנות
         </Button>
 
         {isAuthenticated && role === "operator" && (
@@ -61,7 +61,7 @@ export const Header: React.FC<HeaderProps> = ({
             component={NavLink}
             to="/ops-center"
           >
-            Ops Center
+            מרכז בקרה
           </Button>
         )}
 
@@ -94,7 +94,7 @@ export const Header: React.FC<HeaderProps> = ({
                 component={NavLink}
                 to="/login"
               >
-                Login
+                התחברות
               </Button>
               <Button
                 variant="outlined" // Make register stand out a bit
@@ -103,7 +103,7 @@ export const Header: React.FC<HeaderProps> = ({
                 component={NavLink}
                 to="/register"
               >
-                Register
+                הרשמה
               </Button>
             </>
           ) : (
@@ -117,7 +117,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={onLogout}
                 startIcon={<ExitToAppIcon />}
               >
-                Logout
+                התנתקות
               </Button>
             </>
           )}

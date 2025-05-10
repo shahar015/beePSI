@@ -53,19 +53,14 @@ export const useStyles = makeStyles()((theme) => ({
   },
   cardListContainer: {
     display: "flex",
-    overflowX: "auto", // Enable horizontal scroll
+    overflowX: "auto",
     paddingTop: theme.spacing(1),
-    paddingBottom: theme.spacing(3), // Space for scrollbar and below cards
-    gap: theme.spacing(2.5), // Space between cards
-    // Align items to the start for RTL, so scroll starts from the right
+    paddingBottom: theme.spacing(3),
+    gap: theme.spacing(2.5),
     justifyContent: "flex-start",
-    // Remove default browser scrollbar for a cleaner look (custom scrollbar in theme/CssBaseline)
     "&::-webkit-scrollbar": {
-      // display: 'none', // Or style it via CssBaseline in theme.ts
       height: "8px",
     },
-    // '-ms-overflow-style': 'none',  /* IE and Edge */
-    // 'scrollbar-width': 'none',  /* Firefox */
   },
   loadingOrErrorContainer: {
     display: "flex",

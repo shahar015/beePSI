@@ -107,7 +107,7 @@ const App: React.FC = () => {
           setCartItems(transformBackendCartToFrontend(backendCart || []));
         } catch (err) {
           const error = err as Error;
-          openSnackbar(error.message || "Failed to fetch cart.", "error");
+          openSnackbar(error.message || "טעינת עגלה נכשלה.", "error");
           setCartItems([]);
         } finally {
           setCartLoading(false);
@@ -132,7 +132,7 @@ const App: React.FC = () => {
         role: role,
         loggedInEntityDetails: entityDetails,
       });
-      openSnackbar("Login successful!", "success");
+      openSnackbar("התחברות בוצעה בהצלחה!", "success");
       if (role === "user") {
         fetchCartItems(creds);
         const from = location.state?.from?.pathname || "/";
@@ -148,7 +148,7 @@ const App: React.FC = () => {
   const handleLogout = useCallback(() => {
     setAuthState(initialAuthState);
     setCartItems([]);
-    openSnackbar("Logged out successfully.", "info");
+    openSnackbar("התנתקות בוצעה בהצלחה.", "info");
     navigate("/login");
   }, [navigate, openSnackbar]);
 
@@ -171,10 +171,7 @@ const App: React.FC = () => {
       authState.role !== "user" ||
       !authState.credentials
     ) {
-      openSnackbar(
-        "Please log in as a user to add items to your cart.",
-        "warning"
-      );
+      openSnackbar("אנא התחבר כדי לצפות בעגלה שלך.", "warning");
       navigate("/login");
       return;
     }
@@ -182,10 +179,10 @@ const App: React.FC = () => {
     try {
       await apiAddToCart(model.id, quantity, authState.credentials);
       await fetchCartItems(authState.credentials); // Refetch entire cart
-      openSnackbar(`${model.name} added to cart!`, "success");
+      openSnackbar(`${model.name} התווסף לעגלה!`, "success");
     } catch (err) {
       const error = err as Error;
-      openSnackbar(error.message || "Failed to add item to cart.", "error");
+      openSnackbar(error.message || "קרתה שגיאה בזמן הוספה לעגלה.", "error");
     } finally {
       setCartLoading(false);
     }
@@ -202,13 +199,10 @@ const App: React.FC = () => {
     try {
       await apiRemoveFromCart(modelId, authState.credentials);
       await fetchCartItems(authState.credentials); // Refetch entire cart
-      openSnackbar("Item removed from cart.", "info");
+      openSnackbar("מוצר נמחק מעגלה.", "info");
     } catch (err) {
       const error = err as Error;
-      openSnackbar(
-        error.message || "Failed to remove item from cart.",
-        "error"
-      );
+      openSnackbar(error.message || "כשל במחיקת מוצר מהעגלה.", "error");
     } finally {
       setCartLoading(false);
     }
@@ -236,10 +230,10 @@ const App: React.FC = () => {
         authState.credentials
       );
       await fetchCartItems(authState.credentials); // Refetch entire cart
-      openSnackbar("Cart quantity updated.", "success");
+      openSnackbar("כמות מוצר עודכנה בהצלחה.", "success");
     } catch (err) {
       const error = err as Error;
-      openSnackbar(error.message || "Failed to update cart quantity.", "error");
+      openSnackbar(error.message || "כשל בעדכון כמות מוצר.", "error");
     } finally {
       setCartLoading(false);
     }
@@ -251,22 +245,22 @@ const App: React.FC = () => {
       authState.role !== "user" ||
       !authState.credentials
     ) {
-      openSnackbar("Please log in to complete your purchase.", "warning");
+      openSnackbar("אנא התחבר להשלמת הקנייה.", "warning");
       navigate("/login");
       return;
     }
     if (cartItems.length === 0) {
-      openSnackbar("Your cart is empty.", "info");
+      openSnackbar("העגלה שלך ריקה.", "info");
       return;
     }
     setCartLoading(true);
     try {
       const response = await apiPurchaseBeepersFromCart(authState.credentials);
-      openSnackbar(response.message || "Purchase successful!", "success");
+      openSnackbar(response.message || "רכישה בוצעה בהצלחה!", "success");
       await fetchCartItems(authState.credentials);
     } catch (err) {
       const error = err as Error;
-      openSnackbar(error.message || "Purchase failed.", "error");
+      openSnackbar(error.message || "רכישה נכשלה.", "error");
     } finally {
       setCartLoading(false);
     }
@@ -280,7 +274,7 @@ const App: React.FC = () => {
         setBeeperModels(models);
       } catch (err) {
         const error = err as Error;
-        openSnackbar(error.message || "Failed to load beeper models.", "error");
+        openSnackbar(error.message || "כשל בטעינת ביפרים.", "error");
       } finally {
         setShopLoading(false);
       }
