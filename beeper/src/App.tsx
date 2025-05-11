@@ -80,8 +80,82 @@ function App() {
         // הוסף פריט חדש
         return [...prevCart, { ...modelToAdd, quantity: 1 }];
       }
+<<<<<<< Updated upstream
     });
     setCheckoutState({ loading: false, error: null, success: false }); // אפס סטטוס רכישה
+=======
+    },
+    [authState.role, openSnackbar]
+  );
+
+  const handleLoginSuccess = useCallback(
+    (
+      creds: { username: string; password_plaintext: string },
+      entityDetails: UserData | OperatorData,
+      role: "user" | "operator"
+    ) => {
+      setAuthState({
+        isAuthenticated: true,
+        isLoading: false,
+        credentials: creds,
+        role: role,
+        loggedInEntityDetails: entityDetails,
+      });
+      openSnackbar("התחברות בוצעה בהצלחה!", "success");
+      if (role === "user") {
+        fetchCartItems(creds);
+        const from = location.state?.from?.pathname || "/";
+        navigate(from, { replace: true });
+      } else if (role === "operator") {
+        setCartItems([]);
+        navigate("/ops-center");
+      }
+    },
+    [navigate, openSnackbar, location.state, fetchCartItems]
+  );
+
+  const handleLogout = useCallback(() => {
+    setAuthState(initialAuthState);
+    setCartItems([]);
+    openSnackbar("התנתקות בוצעה בהצלחה.", "info");
+    navigate("/login");
+  }, [navigate, openSnackbar]);
+
+  useEffect(() => {
+    if (authState.role === "user" && authState.credentials) {
+      fetchCartItems(authState.credentials);
+    } else if (!authState.isAuthenticated) {
+      setCartItems([]);
+    }
+  }, [
+    authState.credentials,
+    authState.role,
+    authState.isAuthenticated,
+    fetchCartItems,
+  ]);
+
+  const handleAddToCart = async (model: BeeperModel, quantity: number) => {
+    if (
+      !authState.isAuthenticated ||
+      authState.role !== "user" ||
+      !authState.credentials
+    ) {
+      openSnackbar("אנא התחבר כמשתמש כדי לצפות בעגלה שלך.", "warning");
+      navigate("/login");
+      return;
+    }
+    setCartLoading(true); // Use general cart loading
+    try {
+      await apiAddToCart(model.id, quantity, authState.credentials);
+      await fetchCartItems(authState.credentials); // Refetch entire cart
+      openSnackbar(`${model.name} התווסף לעגלה!`, "success");
+    } catch (err) {
+      const error = err as Error;
+      openSnackbar(error.message || "קרתה שגיאה בזמן הוספה לעגלה.", "error");
+    } finally {
+      setCartLoading(false);
+    }
+>>>>>>> Stashed changes
   };
 
   const updateCartQuantity = (modelId: number, quantity: number) => {
