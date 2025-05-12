@@ -1,4 +1,3 @@
-// src/pages/CartPage/CartPageStyles.ts
 import { makeStyles } from "tss-react/mui";
 import { alpha } from "@mui/material/styles";
 
@@ -15,6 +14,7 @@ export const useStyles = makeStyles()((theme) => ({
     textAlign: "center",
     color: theme.palette.primary.light,
     marginBottom: theme.spacing(1),
+    fontWeight: 700,
   },
   emptyCartContainer: {
     display: "flex",
@@ -44,7 +44,7 @@ export const useStyles = makeStyles()((theme) => ({
     width: "80px",
     height: "80px",
     flexShrink: 0,
-    backgroundColor: alpha(theme.palette.text.disabled, 0.1),
+    backgroundColor: alpha(theme.palette.text.disabled, 0.05),
     borderRadius: theme.shape.borderRadius,
     overflow: "hidden",
     display: "flex",
@@ -68,6 +68,7 @@ export const useStyles = makeStyles()((theme) => ({
   },
   itemPrice: {
     color: theme.palette.text.secondary,
+    fontSize: "0.9rem",
   },
   itemQuantityContainer: {
     display: "flex",
@@ -75,29 +76,33 @@ export const useStyles = makeStyles()((theme) => ({
     gap: theme.spacing(1),
   },
   quantityField: {
-    width: "60px", // Small width for quantity input
+    width: "70px",
     "& .MuiInputBase-input": {
       textAlign: "center",
-      padding: theme.spacing(1),
+      padding: theme.spacing(1, 0.5),
     },
   },
+  itemSubtotal: {
+    fontWeight: "bold",
+    minWidth: "90px",
+    textAlign: "right",
+    color: theme.palette.text.primary,
+  },
   removeItemButton: {
-    // marginLeft: 'auto', // Pushes it to the end in LTR, might need adjustment for RTL
-    // For RTL, flex parent should handle alignment or use marginStart
     color: theme.palette.error.light,
     "&:hover": {
       backgroundColor: alpha(theme.palette.error.main, 0.1),
     },
   },
   summaryContainer: {
-    marginTop: "auto", // Pushes summary to the bottom if content is short
-    padding: theme.spacing(2),
+    marginTop: "auto",
+    padding: theme.spacing(3),
     backgroundColor: theme.palette.background.paper,
     borderRadius: theme.shape.borderRadius,
     boxShadow: theme.shadows[3],
     display: "flex",
     flexDirection: "column",
-    gap: theme.spacing(1.5),
+    gap: theme.spacing(2),
   },
   summaryRow: {
     display: "flex",
@@ -106,7 +111,7 @@ export const useStyles = makeStyles()((theme) => ({
   },
   totalPrice: {
     fontWeight: 700,
-    fontSize: "1.25rem",
+    fontSize: "1.35rem",
     color: theme.palette.primary.light,
   },
   checkoutButton: {
@@ -116,9 +121,11 @@ export const useStyles = makeStyles()((theme) => ({
   },
   loadingContainer: {
     display: "flex",
+    flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
     padding: theme.spacing(4),
     flexGrow: 1,
+    gap: theme.spacing(1.5),
   },
 }));

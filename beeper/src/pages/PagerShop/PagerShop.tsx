@@ -1,4 +1,3 @@
-// src/pages/PagerShop/PagerShop.tsx
 import React, { useState, useMemo } from "react";
 import {
   TextField,
@@ -7,27 +6,19 @@ import {
   InputAdornment,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import { BeeperModel, SnackbarSeverity } from "../../types";
 import { BeeperCard } from "../../components/BeeperCard/BeeperCard";
 import { useStyles } from "./PagerShopStyles";
+import { useBeeperShop } from "../../hooks/useBeeperShop";
 
-interface PagerShopProps {
-  beeperModels: BeeperModel[];
-  loading: boolean; // Loading state for fetching beeper models
-  onAddToCart: (beeperModel: BeeperModel, quantity: number) => void;
-  openSnackbar: (message: string, severity?: SnackbarSeverity) => void; // For potential errors specific to this page
-}
-
-export const PagerShop: React.FC<PagerShopProps> = ({
-  beeperModels,
-  loading,
-  onAddToCart,
-}) => {
+export const PagerShop: React.FC = () => {
   const { classes } = useStyles();
+  const {
+    beeperModels,
+    isLoading: isShopLoading,
+    error: shopError,
+  } = useBeeperShop();
   const [searchTerm, setSearchTerm] = useState<string>("");
 
-  // Memoize filtered beepers to avoid re-calculating on every render
-  // unless beeperModels or searchTerm changes.
   const filteredBeepers = useMemo(() => {
     if (!searchTerm.trim()) {
       return beeperModels;
@@ -45,21 +36,27 @@ export const PagerShop: React.FC<PagerShopProps> = ({
     setSearchTerm(event.target.value);
   };
 
-  // Content to display based on loading state and filtered results
   let content;
-  if (loading) {
+  if (isShopLoading) {
     content = (
       <div className={classes.loadingOrErrorContainer}>
         <CircularProgress size={60} />
         <Typography variant="h6">טוען ביפרים...</Typography>
       </div>
     );
-  } else if (beeperModels.length === 0 && !loading) {
-    // Check beeperModels from props
+  } else if (shopError) {
+    content = (
+      <div className={classes.loadingOrErrorContainer}>
+        <Typography variant="h6" color="error">
+          שגיאה בטעינת המוצרים: {shopError}
+        </Typography>
+      </div>
+    );
+  } else if (beeperModels.length === 0) {
     content = (
       <div className={classes.loadingOrErrorContainer}>
         <Typography variant="h6" color="textSecondary">
-          אין ביפרים זמינים כרגע. אנא בדוק מאוחר יותר.
+          לא נמצאו דגמי ביפרים זמינים כרגע.
         </Typography>
       </div>
     );
@@ -67,7 +64,7 @@ export const PagerShop: React.FC<PagerShopProps> = ({
     content = (
       <div className={classes.loadingOrErrorContainer}>
         <Typography variant="h6" className={classes.noResultsText}>
-          אין ביפרים התואמים לחיפוש "{searchTerm}". נסה חיפוש אחר.
+          לא נמצאו ביפרים התואמים לחיפוש "{searchTerm}".
         </Typography>
       </div>
     );
@@ -76,11 +73,7 @@ export const PagerShop: React.FC<PagerShopProps> = ({
       <div className={classes.cardListOuterContainer}>
         <div className={classes.cardListContainer}>
           {filteredBeepers.map((beeper) => (
-            <BeeperCard
-              key={beeper.id}
-              beeper={beeper}
-              onAddToCart={onAddToCart}
-            />
+            <BeeperCard key={beeper.id} beeper={beeper} />
           ))}
         </div>
       </div>
@@ -90,23 +83,21 @@ export const PagerShop: React.FC<PagerShopProps> = ({
   return (
     <div className={classes.shopRoot}>
       <Typography variant="h3" component="h1" className={classes.pageTitle}>
-        קטלוג ביפרים למכירה
+        קטלוג הארסנל האסטרטגי
       </Typography>
       <div className={classes.searchAndFilterContainer}>
         <TextField
           className={classes.searchField}
           variant="outlined"
-          placeholder="חפש לפי שם דגם או תיאור..."
+          placeholder="חפש לפי שם או תיאור..."
           value={searchTerm}
           onChange={handleSearchChange}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              ),
-            },
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon color="action" />
+              </InputAdornment>
+            ),
           }}
         />
       </div>

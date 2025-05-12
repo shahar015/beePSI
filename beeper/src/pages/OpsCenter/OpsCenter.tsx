@@ -1,66 +1,81 @@
-// src/pages/OpsCenter/OpsCenter.tsx
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import HighlightOffIcon from "@mui/icons-material/HighlightOff";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import SearchIcon from "@mui/icons-material/Search";
 import {
+  Button,
+  Checkbox,
+  CircularProgress,
+  InputAdornment,
+  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Checkbox,
-  Button,
-  CircularProgress,
-  Typography,
   TextField,
-  InputAdornment,
-  Paper, // Using Paper as the TableContainer component
+  Typography,
 } from "@mui/material";
-import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import HighlightOffIcon from "@mui/icons-material/HighlightOff";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import SearchIcon from "@mui/icons-material/Search";
-import { getSoldBeepers, activateBeepers } from "../../services/api";
-import { SoldBeeper, AppAuthState, SnackbarSeverity } from "../../types";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useSnackbar } from "../../context/SnackbarContext";
+import { useAuth } from "../../hooks/useAuth";
+import { activateBeepers, getSoldBeepers } from "../../services/api";
+import { SoldBeeper } from "../../types";
 import { useStyles } from "./OpsCenterStyles";
 
-interface OpsCenterProps {
-  operatorCredentials: AppAuthState["credentials"];
-  openSnackbar: (message: string, severity?: SnackbarSeverity) => void;
-}
-
-export const OpsCenter: React.FC<OpsCenterProps> = ({
-  operatorCredentials,
-  openSnackbar,
-}) => {
+export const OpsCenter: React.FC = () => {
   const { classes } = useStyles();
+  const { authState } = useAuth();
+  const { openSnackbar } = useSnackbar();
+
   const [beepers, setBeepers] = useState<SoldBeeper[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [selectedBeeperIds, setSelectedBeeperIds] = useState<string[]>([]); // Store IDs as strings
+  const [selectedBeeperIds, setSelectedBeeperIds] = useState<string[]>([]);
   const [activating, setActivating] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
 
   const fetchBeepers = useCallback(async () => {
-    if (!operatorCredentials) {
-      openSnackbar("פרטי התחברות של המפעיל אינם נכונים.", "error");
+    if (!authState.credentials) {
+      openSnackbar(
+        "Operator credentials not available. Cannot fetch data.",
+        "error"
+      );
       setLoading(false);
       return;
     }
     setLoading(true);
     try {
-      const data = await getSoldBeepers(operatorCredentials);
+      const data = await getSoldBeepers(authState.credentials);
       setBeepers(data || []);
     } catch (err) {
       const error = err as Error;
-      openSnackbar(error.message || "קבלת ביפרים נכשלה.", "error");
+      openSnackbar(error.message || "Failed to fetch sold beepers.", "error");
       setBeepers([]);
     } finally {
       setLoading(false);
     }
-  }, [operatorCredentials, openSnackbar]);
+  }, [authState.credentials, openSnackbar]);
 
   useEffect(() => {
-    fetchBeepers();
-  }, [fetchBeepers]);
+    if (authState.isAuthenticated && authState.role === "operator") {
+      fetchBeepers();
+    }
+  }, [authState.isAuthenticated, authState.role, fetchBeepers]);
+
+  const filteredBeepers = useMemo(() => {
+    if (!searchTerm.trim()) {
+      return beepers;
+    }
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    return beepers.filter(
+      (beeper) =>
+        beeper.id.toLowerCase().includes(lowerSearchTerm) ||
+        beeper.model_name.toLowerCase().includes(lowerSearchTerm) ||
+        String(beeper.user_id).toLowerCase().includes(lowerSearchTerm) ||
+        beeper.status.toLowerCase().includes(lowerSearchTerm)
+    );
+  }, [beepers, searchTerm]);
 
   const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
@@ -97,18 +112,18 @@ export const OpsCenter: React.FC<OpsCenterProps> = ({
       openSnackbar("אנא בחר לפחות ביפר אחד להפעלה.", "warning");
       return;
     }
-    if (!operatorCredentials) {
-      openSnackbar("פרטי התחברות של מפעיל חסרים.", "error");
+    if (!authState.credentials) {
+      openSnackbar("שגיאת אימות: פרטי מפעיל חסרים.", "error");
       return;
     }
     setActivating(true);
     try {
       const response = await activateBeepers(
         selectedBeeperIds,
-        operatorCredentials
+        authState.credentials
       );
       const activatedCount = response.activated_ids?.length || 0;
-      let message = response.message || `${activatedCount} ביפרים הופעלו.`;
+      let message = response.message || `${activatedCount} ביפר(ים) עובדו.`;
 
       if (response.errors && response.errors.length > 0) {
         message += ` בעיות: ${response.errors.join(", ")}`;
@@ -116,38 +131,24 @@ export const OpsCenter: React.FC<OpsCenterProps> = ({
       } else if (activatedCount > 0) {
         openSnackbar(message, "success");
       } else {
-        openSnackbar(message || "אף ביפר לא הופעל.", "info");
+        openSnackbar(message || "לא הופעלו ביפרים.", "info");
       }
 
       fetchBeepers();
       setSelectedBeeperIds([]);
     } catch (err) {
       const error = err as Error;
-      openSnackbar(error.message || "כשל בהפעלת הביפרים.", "error");
+      openSnackbar(error.message || "הפעלת הביפרים נכשלה.", "error");
     } finally {
       setActivating(false);
     }
   };
 
-  const filteredBeepers = useMemo(() => {
-    if (!searchTerm.trim()) {
-      return beepers;
-    }
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    return beepers.filter(
-      (beeper) =>
-        beeper.id.toLowerCase().includes(lowerSearchTerm) ||
-        beeper.model_name.toLowerCase().includes(lowerSearchTerm) ||
-        String(beeper.user_id).toLowerCase().includes(lowerSearchTerm) ||
-        beeper.status.toLowerCase().includes(lowerSearchTerm)
-    );
-  }, [beepers, searchTerm]);
-
   if (loading && beepers.length === 0) {
     return (
       <div className={classes.loadingOrErrorContainer}>
         <CircularProgress size={50} />
-        <Typography variant="h6">טוען מידע ביפרים...</Typography>
+        <Typography variant="h6">טוען נתוני ביפרים...</Typography>
       </div>
     );
   }
@@ -155,32 +156,30 @@ export const OpsCenter: React.FC<OpsCenterProps> = ({
   return (
     <div className={classes.opsCenterRoot}>
       <Typography variant="h4" component="h1" className={classes.title}>
-        לוח בקרה מפעילים
+        מרכז שליטה ובקרה מבצעי
       </Typography>
 
       <div className={classes.controlBar}>
         <TextField
           className={classes.searchFieldOps}
           variant="outlined"
-          placeholder="Search by ID, Model, User ID, Status..."
+          placeholder="חפש לפי מזהה, דגם, משתמש, סטטוס..."
           size="small"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              ),
-            },
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon color="action" />
+              </InputAdornment>
+            ),
           }}
         />
         <Button
           variant="contained"
           className={classes.activateButton}
           onClick={handleActivateSelected}
-          disabled={activating || selectedBeeperIds.length === 0}
+          disabled={activating || selectedBeeperIds.length === 0 || loading}
           startIcon={
             activating ? (
               <CircularProgress size={20} color="inherit" />
@@ -199,8 +198,8 @@ export const OpsCenter: React.FC<OpsCenterProps> = ({
         <div className={classes.loadingOrErrorContainer}>
           <Typography variant="h6" color="textSecondary">
             {searchTerm
-              ? `לא נמצאו ביפרים המתאימים לחיפוש "${searchTerm}".`
-              : "אין ביפרים שנמכרו."}
+              ? `לא נמצאו ביפרים התואמים לחיפוש "${searchTerm}".`
+              : "לא נמכרו ביפרים עדיין."}
           </Typography>
         </div>
       )}
@@ -210,7 +209,7 @@ export const OpsCenter: React.FC<OpsCenterProps> = ({
           <Table
             stickyHeader
             className={classes.table}
-            aria-label="sold beepers table"
+            aria-label="טבלת ביפרים שנמכרו"
           >
             <TableHead className={classes.tableHead}>
               <TableRow>
@@ -226,12 +225,15 @@ export const OpsCenter: React.FC<OpsCenterProps> = ({
                       selectedBeeperIds.length === filteredBeepers.length
                     }
                     onChange={handleSelectAllClick}
-                    inputProps={{ "aria-label": "select all beepers" }}
+                    inputProps={{ "aria-label": "בחר את כל הביפרים" }}
+                    disabled={loading || activating}
                   />
                 </TableCell>
-                <TableCell className={classes.tableCell}>מזהה ביפר</TableCell>
+                <TableCell className={classes.tableCell}>
+                  מזהה יחידת ביפר
+                </TableCell>
                 <TableCell className={classes.tableCell}>דגם</TableCell>
-                <TableCell className={classes.tableCell}>מועד קנייה</TableCell>
+                <TableCell className={classes.tableCell}>זמן רכישה</TableCell>
                 <TableCell className={classes.tableCell}>מזהה משתמש</TableCell>
                 <TableCell className={classes.tableCell}>סטטוס</TableCell>
               </TableRow>
@@ -259,9 +261,12 @@ export const OpsCenter: React.FC<OpsCenterProps> = ({
                       <Checkbox
                         color="primary"
                         checked={isItemSelected}
-                        inputProps={{
-                          "aria-labelledby": `checkbox-for-${beeper.id}`,
+                        slotProps={{
+                          input: {
+                            "aria-labelledby": `checkbox-for-${beeper.id}`,
+                          },
                         }}
+                        disabled={loading || activating}
                       />
                     </TableCell>
                     <TableCell
@@ -273,12 +278,14 @@ export const OpsCenter: React.FC<OpsCenterProps> = ({
                       {beeper.id}
                     </TableCell>
                     <TableCell className={classes.tableCell}>
-                      {beeper.model_name || "N/A"}
+                      {beeper.model_name || "לא ידוע"}
                     </TableCell>
                     <TableCell className={classes.tableCell}>
                       {beeper.purchase_timestamp
-                        ? new Date(beeper.purchase_timestamp).toLocaleString()
-                        : "N/A"}
+                        ? new Date(beeper.purchase_timestamp).toLocaleString(
+                            "he-IL"
+                          )
+                        : "לא זמין"}
                     </TableCell>
                     <TableCell className={classes.tableCell}>
                       {beeper.user_id}
@@ -300,7 +307,7 @@ export const OpsCenter: React.FC<OpsCenterProps> = ({
                           variant="body2"
                           sx={{ textTransform: "capitalize" }}
                         >
-                          {beeper.status}
+                          {beeper.status === "active" ? "פעיל" : "הופעל"}
                         </Typography>
                       </div>
                     </TableCell>

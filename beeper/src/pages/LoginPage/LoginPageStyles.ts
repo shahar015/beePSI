@@ -1,15 +1,14 @@
-// src/pages/LoginPage/LoginPageStyles.ts
 import { makeStyles } from "tss-react/mui";
 import { Theme } from "@mui/material/styles";
 
 export const useStyles = makeStyles()((theme: Theme) => ({
   loginRoot: {
     display: "flex",
-    flexDirection: "column", // Ensure content inside is stacked
+    flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
-    minHeight: "calc(100vh - 64px - 32px)", // Full height minus header and some padding
-    padding: theme.spacing(4), // Add some padding around the form container
+    minHeight: "calc(100vh - 64px - 32px)",
+    padding: theme.spacing(4),
     backgroundColor: theme.palette.background.default,
     boxSizing: "border-box",
   },
@@ -17,16 +16,16 @@ export const useStyles = makeStyles()((theme: Theme) => ({
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    padding: theme.spacing(3, 4), // Vertical, Horizontal padding
+    padding: theme.spacing(3, 4),
     backgroundColor: theme.palette.background.paper,
     borderRadius: theme.shape.borderRadius,
-    boxShadow: theme.shadows[5], // Add some depth
+    boxShadow: theme.shadows[5],
     width: "100%",
-    maxWidth: "420px", // Max width for the form
+    maxWidth: "420px",
     boxSizing: "border-box",
   },
   title: {
-    marginBottom: theme.spacing(3), // More space below title
+    marginBottom: theme.spacing(3),
     color: theme.palette.primary.main,
     fontWeight: 700,
   },
@@ -34,21 +33,18 @@ export const useStyles = makeStyles()((theme: Theme) => ({
     width: "100%",
     marginBottom: theme.spacing(2),
   },
-  textField: {
-    // Common styling for text fields if needed, though MUI defaults are good
-    // marginBottom: theme.spacing(2), // Handled by margin="normal" on TextField
-  },
+  textField: {},
   submitButton: {
     marginTop: theme.spacing(3),
     marginBottom: theme.spacing(2),
-    padding: theme.spacing(1.25, 0), // Slightly taller button
+    padding: theme.spacing(1.25, 0),
     fontSize: "1rem",
     fontWeight: 600,
   },
   linksContainer: {
     width: "100%",
     display: "flex",
-    justifyContent: "center", // Center the link
+    justifyContent: "center",
     marginTop: theme.spacing(2),
   },
   toggleRoleContainer: {

@@ -1,4 +1,3 @@
-// src/main.tsx
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
@@ -7,12 +6,14 @@ import { theme } from "./theme";
 import { TssCacheProvider } from "tss-react";
 import createCache from "@emotion/cache";
 import { prefixer } from "stylis";
-import rtlPlugin from "stylis-plugin-rtl";
+import stylisRTLPlugin from "stylis-plugin-rtl";
 import { BrowserRouter } from "react-router-dom";
+import { Provider as JotaiProvider } from "jotai";
+import { SnackbarProvider } from "./context/SnackbarContext";
 
 const cacheRTL = createCache({
   key: "muirtl",
-  stylisPlugins: [prefixer, rtlPlugin],
+  stylisPlugins: [prefixer, stylisRTLPlugin],
 });
 
 const rootElement = document.getElementById("root");
@@ -24,13 +25,17 @@ if (!rootElement) {
 
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
-    <TssCacheProvider value={cacheRTL}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
-      </ThemeProvider>
-    </TssCacheProvider>
+    <JotaiProvider>
+      <TssCacheProvider value={cacheRTL}>
+        <ThemeProvider theme={theme}>
+          <SnackbarProvider>
+            <CssBaseline />
+            <BrowserRouter>
+              <App />
+            </BrowserRouter>
+          </SnackbarProvider>
+        </ThemeProvider>
+      </TssCacheProvider>
+    </JotaiProvider>
   </React.StrictMode>
 );

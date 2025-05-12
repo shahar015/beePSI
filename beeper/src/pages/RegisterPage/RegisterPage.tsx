@@ -1,6 +1,5 @@
-// src/pages/RegisterPage/RegisterPage.tsx
 import React, { useState } from "react";
-import { useNavigate, Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
 import {
   TextField,
   Button,
@@ -9,32 +8,20 @@ import {
   CircularProgress,
   Link,
 } from "@mui/material";
-import { UserData, SnackbarSeverity, ApiErrorResponse } from "../../types";
 import { useStyles } from "./RegisterPageStyles";
+import { useAuth } from "../../hooks/useAuth";
+import { useSnackbar } from "../../context/SnackbarContext";
 
-interface RegisterPageProps {
-  openSnackbar: (message: string, severity?: SnackbarSeverity) => void;
-  // API function passed from App.tsx
-  apiRegisterUser: (
-    username: string,
-    email: string,
-    password_plaintext: string
-  ) => Promise<{ message: string; user: UserData }>;
-}
-
-export const RegisterPage: React.FC<RegisterPageProps> = ({
-  openSnackbar,
-  apiRegisterUser,
-}) => {
+export const RegisterPage: React.FC = () => {
   const { classes } = useStyles();
-  const navigate = useNavigate();
+  const { register, authState } = useAuth();
+  const { openSnackbar } = useSnackbar();
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null); // For form-level validation errors
+  const [formError, setFormError] = useState<string | null>(null);
 
   const validateForm = (): boolean => {
     if (
@@ -43,52 +30,39 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
       !password.trim() ||
       !confirmPassword.trim()
     ) {
-      setFormError("כל השדות הם חובה.");
+      setFormError("כל השדות הם שדות חובה.");
       return false;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setFormError("בבקשה הכנס אימייל תקין.");
+      setFormError("אנא הזן כתובת אימייל תקינה.");
       return false;
     }
     if (password.length < 6) {
-      setFormError("סייסמה חייבת להכיל לפחות 6 תווים.");
+      setFormError("הסיסמה חייבת להכיל לפחות 6 תווים.");
       return false;
     }
     if (password !== confirmPassword) {
-      setFormError("סיסמאות לא תואמות.");
+      setFormError("הסיסמאות אינן תואמות.");
       return false;
     }
-    setFormError(null); // Clear previous validation errors
+    setFormError(null);
     return true;
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setFormError(null);
     if (!validateForm()) {
-      // Form error will be displayed by the Alert component
-      if (formError) openSnackbar(formError, "warning"); // Also show in snackbar for consistency
+      if (formError) {
+        openSnackbar(formError, "warning");
+      }
       return;
     }
 
-    setLoading(true);
-    try {
-      const response = await apiRegisterUser(username, email, password);
-      openSnackbar(
-        response.message || "הרשמה בוצעה בהצלחה. אנא התחבר.",
-        "success"
-      );
-      navigate("/login"); // Redirect to login page after successful registration
-    } catch (err) {
-      const error = err as ApiErrorResponse | Error;
-      const errorMessage =
-        (error as ApiErrorResponse).error ||
-        (error as Error).message ||
-        "הרשמה נכשלה. אנא נסה שוב.";
-      setFormError(errorMessage); // Display error in the form's alert
-      openSnackbar(errorMessage, "error");
-    } finally {
-      setLoading(false);
+    const success = await register(username, email, password);
+    if (!success && !authState.isLoading) {
+      setFormError(authState.error || "ההרשמה נכשלה. אנא נסה שוב.");
     }
   };
 
@@ -96,7 +70,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
     <div className={classes.registerRoot}>
       <div className={classes.formContainer}>
         <Typography variant="h4" component="h1" className={classes.title}>
-          צור חשבון
+          יצירת חשבון
         </Typography>
 
         {formError && (
@@ -122,14 +96,14 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
             autoFocus
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            disabled={loading}
+            disabled={authState.isLoading}
             className={classes.textField}
             error={
               !!(formError && formError.toLowerCase().includes("username"))
-            } // Example specific field error highlight
+            }
           />
           <TextField
-            label="אימייל"
+            label="כתובת אימייל"
             variant="outlined"
             margin="normal"
             required
@@ -140,7 +114,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            disabled={loading}
+            disabled={authState.isLoading}
             className={classes.textField}
             error={!!(formError && formError.toLowerCase().includes("email"))}
           />
@@ -156,9 +130,9 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            disabled={loading}
+            disabled={authState.isLoading}
             className={classes.textField}
-            helperText="סיסמה חייבת להכיל לפחות 6 תווים."
+            helperText="הסיסמה חייבת להכיל לפחות 6 תווים."
             error={
               !!(
                 formError &&
@@ -179,7 +153,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
             autoComplete="new-password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            disabled={loading}
+            disabled={authState.isLoading}
             className={classes.textField}
             error={!!(formError && formError.toLowerCase().includes("match"))}
           />
@@ -188,17 +162,19 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
             fullWidth
             variant="contained"
             color="primary"
-            disabled={loading}
+            disabled={authState.isLoading}
             className={classes.submitButton}
             startIcon={
-              loading ? <CircularProgress size={20} color="inherit" /> : null
+              authState.isLoading ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : null
             }
           >
-            {loading ? "הרשמה מתבצעת..." : "הירשם"}
+            {authState.isLoading ? "יוצר חשבון..." : "הירשם"}
           </Button>
           <div className={classes.linksContainer}>
             <Link component={RouterLink} to="/login" variant="body2">
-              {"כבר יש לך חשבון? התחבר כאן"}
+              {"כבר יש לך חשבון? התחבר"}
             </Link>
           </div>
         </form>

@@ -1,4 +1,3 @@
-// src/pages/RegisterPage/RegisterPageStyles.ts
 import { makeStyles } from "tss-react/mui";
 import { Theme } from "@mui/material/styles";
 
@@ -8,8 +7,8 @@ export const useStyles = makeStyles()((theme: Theme) => ({
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
-    minHeight: "calc(100vh - 64px - 32px)", // Full height minus header and some padding
-    padding: theme.spacing(4), // Add some padding around the form container
+    minHeight: "calc(100vh - 64px - 32px)",
+    padding: theme.spacing(4),
     backgroundColor: theme.palette.background.default,
     boxSizing: "border-box",
   },
@@ -17,12 +16,12 @@ export const useStyles = makeStyles()((theme: Theme) => ({
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    padding: theme.spacing(3, 4), // Vertical, Horizontal padding
+    padding: theme.spacing(3, 4),
     backgroundColor: theme.palette.background.paper,
     borderRadius: theme.shape.borderRadius,
-    boxShadow: theme.shadows[5], // Add some depth
+    boxShadow: theme.shadows[5],
     width: "100%",
-    maxWidth: "450px", // Max width for the form
+    maxWidth: "450px",
     boxSizing: "border-box",
   },
   title: {
@@ -34,20 +33,16 @@ export const useStyles = makeStyles()((theme: Theme) => ({
     width: "100%",
     marginBottom: theme.spacing(2),
   },
-  textField: {
-    // Styles for TextField if needed, margin="normal" is used on the component
-  },
+  textField: {},
   submitButton: {
     marginTop: theme.spacing(3),
     marginBottom: theme.spacing(2),
-    padding: theme.spacing(1.25, 0), // Slightly taller button
-    fontSize: "1rem",
-    fontWeight: 600,
+    padding: theme.spacing(1.25, 0),
   },
   linksContainer: {
     width: "100%",
     display: "flex",
-    justifyContent: "center", // Center the link
+    justifyContent: "center",
     marginTop: theme.spacing(2),
   },
 }));

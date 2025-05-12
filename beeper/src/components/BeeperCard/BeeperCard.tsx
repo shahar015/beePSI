@@ -1,23 +1,28 @@
-// src/components/BeeperCard/BeeperCard.tsx
 import React from "react";
-import { Typography, Button } from "@mui/material";
+import { Typography, Button, CircularProgress } from "@mui/material";
 import AddShoppingCartIcon from "@mui/icons-material/AddShoppingCart";
-import { BeeperModel } from "../../types"; // Assuming BeeperModel is defined in types.ts
+import { BeeperModel } from "../../types";
 import { useStyles } from "./BeeperCardStyles";
+import { useCart } from "../../hooks/useCart";
+import { useAuth } from "../../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 interface BeeperCardProps {
   beeper: BeeperModel;
-  onAddToCart: (beeperModel: BeeperModel, quantity: number) => void; // Pass the whole model for context
 }
 
-export const BeeperCard: React.FC<BeeperCardProps> = ({
-  beeper,
-  onAddToCart,
-}) => {
+export const BeeperCard: React.FC<BeeperCardProps> = ({ beeper }) => {
   const { classes } = useStyles();
+  const { addItemToCart, isLoading: isCartUpdating } = useCart();
+  const { authState } = useAuth();
+  const navigate = useNavigate();
 
-  const handleAddToCartClick = () => {
-    onAddToCart(beeper, 1); // Add one unit of this beeper
+  const handleAddToCartClick = async () => {
+    if (!authState.isAuthenticated || authState.role !== "user") {
+      navigate("/login");
+      return;
+    }
+    await addItemToCart(beeper, 1);
   };
 
   return (
@@ -27,14 +32,13 @@ export const BeeperCard: React.FC<BeeperCardProps> = ({
           src={
             beeper.image_url ||
             "https://placehold.co/280x180/333333/555555?text=No+Image"
-          } // Fallback image
+          }
           alt={beeper.name}
           className={classes.image}
-          loading="lazy" // Lazy load images
+          loading="lazy"
           onError={(e) => {
-            // Fallback if image fails to load
             const target = e.target as HTMLImageElement;
-            target.onerror = null; // Prevent infinite loop if fallback also fails
+            target.onerror = null;
             target.src =
               "https://placehold.co/280x180/333333/555555?text=Image+Error";
           }}
@@ -58,17 +62,24 @@ export const BeeperCard: React.FC<BeeperCardProps> = ({
         </Typography>
         <div className={classes.priceAndActionContainer}>
           <Typography variant="h6" className={classes.price}>
-            {beeper.price.toFixed(2)} ש"ח
+            ${beeper.price.toFixed(2)}
           </Typography>
           <Button
             variant="contained"
             color="primary"
-            size="small" // Keep button relatively small within the card
-            startIcon={<AddShoppingCartIcon />}
+            size="small"
+            startIcon={
+              isCartUpdating ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : (
+                <AddShoppingCartIcon />
+              )
+            }
             onClick={handleAddToCartClick}
             className={classes.addToCartButton}
+            disabled={isCartUpdating}
           >
-            הוסף לעגלה
+            {isCartUpdating ? "מעדכן..." : "הוסף לעגלה"}
           </Button>
         </div>
       </div>

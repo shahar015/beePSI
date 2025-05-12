@@ -1,37 +1,26 @@
-// src/pages/CartPage/CartPage.tsx
-import React, { useState, useEffect } from "react"; // Added useEffect for local quantity sync
+import DeleteIcon from "@mui/icons-material/Delete";
+import RemoveShoppingCartIcon from "@mui/icons-material/RemoveShoppingCart";
+import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
 import {
-  Typography,
   Button,
-  IconButton,
-  TextField,
   CircularProgress,
   Divider,
+  IconButton,
   Paper,
-  // Box, // Not strictly needed if TextField handles its own layout well
+  TextField,
+  Typography,
 } from "@mui/material";
-import RemoveShoppingCartIcon from "@mui/icons-material/RemoveShoppingCart";
-import DeleteIcon from "@mui/icons-material/Delete";
-import ShoppingBagIcon from "@mui/icons-material/ShoppingBag";
-import { CartItem } from "../../types";
-import { useStyles } from "./CartPageStyles";
+import React, { useEffect, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import { useCart } from "../../hooks/useCart";
+import { useStyles } from "./CartPageStyles";
 
-interface CartPageProps {
-  cartItems: CartItem[];
-  cartLoading: boolean; // General loading for cart (e.g. purchase or any update)
-  // itemUpdatingId prop removed
-  onRemoveItem: (modelId: number) => void;
-  onUpdateQuantity: (modelId: number, newQuantity: number) => void;
-  onPurchase: () => void;
-}
-
-// Simplified Quantity Input - local state for typing, commit on blur/enter
 interface QuantityInputProps {
-  itemQuantity: number; // Current quantity from App's state
+  itemQuantity: number;
   modelId: number;
   onQuantityCommit: (modelId: number, newQuantity: number) => void;
-  disabled?: boolean; // Disabled during general cart loading
+  disabled?: boolean;
 }
 
 const QuantityInput: React.FC<QuantityInputProps> = ({
@@ -43,29 +32,25 @@ const QuantityInput: React.FC<QuantityInputProps> = ({
   const [localQuantity, setLocalQuantity] = useState<string>(
     itemQuantity.toString()
   );
-  const { classes } = useStyles(); // For quantityField style
+  const { classes } = useStyles();
 
-  // Sync local state if the prop changes from App.tsx (e.g., after API update)
   useEffect(() => {
     setLocalQuantity(itemQuantity.toString());
   }, [itemQuantity]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setLocalQuantity(event.target.value); // Allow user to type freely
+    setLocalQuantity(event.target.value);
   };
 
   const handleCommit = () => {
     const newQuantityNum = parseInt(localQuantity, 10);
     if (!isNaN(newQuantityNum) && newQuantityNum >= 0) {
       if (newQuantityNum !== itemQuantity) {
-        // Only commit if value actually changed
         onQuantityCommit(modelId, newQuantityNum);
       } else {
-        // If value is same as original but was typed differently (e.g. "01" vs "1"), reset display
         setLocalQuantity(itemQuantity.toString());
       }
     } else {
-      // Revert to original quantity if input is invalid on blur
       setLocalQuantity(itemQuantity.toString());
     }
   };
@@ -73,7 +58,7 @@ const QuantityInput: React.FC<QuantityInputProps> = ({
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       handleCommit();
-      (event.target as HTMLInputElement).blur(); // Optional: blur input on enter
+      (event.target as HTMLInputElement).blur();
     }
   };
 
@@ -82,25 +67,34 @@ const QuantityInput: React.FC<QuantityInputProps> = ({
       type="number"
       value={localQuantity}
       onChange={handleChange}
-      onBlur={handleCommit} // Commit changes when field loses focus
-      onKeyDown={handleKeyDown} // Commit changes on Enter key
+      onBlur={handleCommit}
+      onKeyDown={handleKeyDown}
       InputProps={{ inputProps: { min: 0, style: { textAlign: "center" } } }}
       variant="outlined"
       size="small"
       className={classes.quantityField}
-      disabled={disabled} // Disable if general cart operation is in progress
+      disabled={disabled}
     />
   );
 };
 
-export const CartPage: React.FC<CartPageProps> = ({
-  cartItems,
-  cartLoading, // General loading state
-  onRemoveItem,
-  onUpdateQuantity,
-  onPurchase,
-}) => {
+export const CartPage: React.FC = () => {
   const { classes } = useStyles();
+  const {
+    cartItems,
+    isLoading: isCartLoading,
+    removeItemFromCart,
+    updateItemQuantity,
+    purchaseCart,
+    fetchCart,
+  } = useCart();
+  const { authState } = useAuth();
+
+  useEffect(() => {
+    if (authState.isAuthenticated && authState.role === "user") {
+      fetchCart();
+    }
+  }, [authState.isAuthenticated, authState.role, fetchCart]);
 
   const calculateSubtotal = (): number => {
     return cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -110,18 +104,18 @@ export const CartPage: React.FC<CartPageProps> = ({
   const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const total = subtotal;
 
-  if (cartLoading && cartItems.length === 0) {
+  if (isCartLoading && cartItems.length === 0) {
     return (
       <div className={classes.loadingContainer}>
         <CircularProgress size={50} />
         <Typography variant="h6" sx={{ mt: 2 }}>
-          טוענים את העגלה שלך...
+          טוען את העגלה שלך...
         </Typography>
       </div>
     );
   }
 
-  if (!cartLoading && cartItems.length === 0) {
+  if (!isCartLoading && cartItems.length === 0) {
     return (
       <div className={classes.cartRoot}>
         <div className={classes.emptyCartContainer}>
@@ -132,15 +126,16 @@ export const CartPage: React.FC<CartPageProps> = ({
             העגלה שלך ריקה
           </Typography>
           <Typography color="textSecondary">
-            זמן לבקר בחנות הביפרים שלנו!
+            נראה שעדיין לא הוספת ביפרים אסטרטגיים לעגלה.
           </Typography>
           <Button
             variant="contained"
             color="primary"
             component={RouterLink}
             to="/"
+            sx={{ mt: 3, px: 4, py: 1.5 }}
           >
-            לחנות הביפרים
+            חזרה לחנות
           </Button>
         </div>
       </div>
@@ -150,7 +145,7 @@ export const CartPage: React.FC<CartPageProps> = ({
   return (
     <div className={classes.cartRoot}>
       <Typography variant="h3" component="h1" className={classes.pageTitle}>
-        עגלת הקניות שלך
+        הארסנל האסטרטגי שלך
       </Typography>
 
       <div className={classes.cartItemsContainer}>
@@ -159,7 +154,7 @@ export const CartPage: React.FC<CartPageProps> = ({
             key={item.id}
             className={classes.cartItem}
             elevation={2}
-            sx={{ opacity: cartLoading ? 0.7 : 1 }}
+            sx={{ opacity: isCartLoading ? 0.7 : 1 }}
           >
             <div className={classes.itemImageContainer}>
               <img
@@ -177,33 +172,26 @@ export const CartPage: React.FC<CartPageProps> = ({
                 {item.name}
               </Typography>
               <Typography variant="body2" className={classes.itemPrice}>
-                מחיר לפריט: {item.price.toFixed(2)} ש"ח
+                ${item.price.toFixed(2)} ליחידה
               </Typography>
             </div>
             <div className={classes.itemQuantityContainer}>
               <QuantityInput
-                itemQuantity={item.quantity} // Pass current quantity from App's state
+                itemQuantity={item.quantity}
                 modelId={item.id}
-                onQuantityCommit={onUpdateQuantity} // This calls App.tsx's handler
-                disabled={cartLoading} // Disable input during any cart operation
+                onQuantityCommit={updateItemQuantity}
+                disabled={isCartLoading}
               />
-              <Typography
-                sx={{
-                  mx: 1,
-                  color: "text.secondary",
-                  minWidth: "80px",
-                  textAlign: "right",
-                }}
-              >
-                סה"כ: {(item.price * item.quantity).toFixed(2)} ש"ח
+              <Typography className={classes.itemSubtotal}>
+                סה"כ: ${(item.price * item.quantity).toFixed(2)}
               </Typography>
             </div>
             <IconButton
-              aria-label={`remove ${item.name} from cart`}
-              onClick={() => onRemoveItem(item.id)}
+              aria-label={`הסר ${item.name} מהעגלה`}
+              onClick={() => removeItemFromCart(item.id)}
               className={classes.removeItemButton}
               size="medium"
-              disabled={cartLoading}
+              disabled={isCartLoading}
             >
               <DeleteIcon />
             </IconButton>
@@ -216,38 +204,38 @@ export const CartPage: React.FC<CartPageProps> = ({
           סיכום הזמנה
         </Typography>
         <div className={classes.summaryRow}>
-          <Typography variant="body1">כמות פריטים:</Typography>
+          <Typography variant="body1">סה"כ פריטים:</Typography>
           <Typography variant="body1">{totalItems}</Typography>
         </div>
         <div className={classes.summaryRow}>
-          <Typography variant="body1">סיכום ביניים: </Typography>
-          <Typography variant="body1">{subtotal.toFixed(2)} ש"ח</Typography>
+          <Typography variant="body1">סכום ביניים:</Typography>
+          <Typography variant="body1">${subtotal.toFixed(2)}</Typography>
         </div>
         <Divider sx={{ my: 1 }} />
         <div className={classes.summaryRow}>
           <Typography variant="h6" className={classes.totalPrice}>
-            מחיר סופי:
+            סה"כ לתשלום:
           </Typography>
           <Typography variant="h6" className={classes.totalPrice}>
-            {total.toFixed(2)} ש"ח
+            ${total.toFixed(2)}
           </Typography>
         </div>
         <Button
           variant="contained"
           color="primary"
           fullWidth
-          onClick={onPurchase}
-          disabled={cartLoading || cartItems.length === 0}
+          onClick={purchaseCart}
+          disabled={isCartLoading || cartItems.length === 0}
           className={classes.checkoutButton}
           startIcon={
-            cartLoading ? (
+            isCartLoading ? (
               <CircularProgress size={20} color="inherit" />
             ) : (
               <ShoppingBagIcon />
             )
           }
         >
-          {cartLoading ? "רכישה מתבצעת..." : "ביצוע רכישה"}
+          {isCartLoading ? "מעבד רכישה..." : "לתשלום מאובטח"}
         </Button>
       </Paper>
     </div>

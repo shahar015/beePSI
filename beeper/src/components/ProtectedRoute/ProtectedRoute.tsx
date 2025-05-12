@@ -1,39 +1,47 @@
-// src/components/ProtectedRoute/ProtectedRoute.tsx
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { AppAuthState } from "../../types"; // Import the AppAuthState type
+import { CircularProgress, Box, Typography } from "@mui/material";
+import { useAuth } from "../../hooks/useAuth"; // Import useAuth hook
 
 interface ProtectedRouteProps {
-  children: React.ReactNode; // The component to render if authorized
-  isAuthenticated: boolean;
-  userRole: AppAuthState["role"]; // 'user' | 'operator' | null
-  requiredRole?: "user" | "operator"; // Optional: specify which role is needed
+  children: React.ReactNode;
+  requiredRole?: "user" | "operator";
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
-  isAuthenticated,
-  userRole,
   requiredRole,
 }) => {
-  const location = useLocation(); // To redirect back after login
+  const { authState } = useAuth(); // Get authState from the hook
+  const location = useLocation();
 
-  if (!isAuthenticated) {
-    // If not authenticated, redirect to the login page
-    // Pass the current location to redirect the user back after successful login
+  if (authState.isLoading) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "80vh",
+        }}
+      >
+        <CircularProgress />
+        <Typography sx={{ mt: 2 }}>מאמת גישה...</Typography>
+      </Box>
+    );
+  }
+
+  if (!authState.isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (requiredRole && userRole !== requiredRole) {
-    // If authenticated but the role does not match the required role,
-    // redirect to a general page (e.g., home page or an "unauthorized" page).
-    // For simplicity, redirecting to home.
+  if (requiredRole && authState.role !== requiredRole) {
     console.warn(
-      `Access Denied: User role '${userRole}' does not match required role '${requiredRole}' for path '${location.pathname}'. Redirecting to home.`
+      `Access Denied: User role '${authState.role}' does not match required role '${requiredRole}' for path '${location.pathname}'. Redirecting to home.`
     );
     return <Navigate to="/" replace />;
   }
 
-  // If authenticated and (no specific role is required OR the role matches), render the children
   return <>{children}</>;
 };

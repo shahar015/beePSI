@@ -1,3 +1,4 @@
+// src/components/Header/HeaderStyles.ts
 import { makeStyles } from "tss-react/mui";
 import { alpha } from "@mui/material/styles";
 
@@ -22,19 +23,19 @@ export const useStyles = makeStyles()((theme) => ({
     alignItems: "center",
     textDecoration: "none",
     cursor: "pointer",
-    gap: theme.spacing(1),
+    gap: theme.spacing(1.5),
+  },
+  logoIcon: {
+    width: "30px",
+    height: "30px",
   },
   logoText: {
     fontWeight: 700,
-    fontSize: "1.75rem",
+    fontSize: "1.6rem",
     color: theme.palette.primary.main,
     "&:hover": {
       color: theme.palette.primary.light,
     },
-  },
-  logoIcon: {
-    color: theme.palette.primary.main,
-    height: 30,
   },
   navContainer: {
     display: "flex",
@@ -42,8 +43,10 @@ export const useStyles = makeStyles()((theme) => ({
     gap: theme.spacing(1.5),
   },
   navButton: {
-    padding: 0,
+    padding: theme.spacing(0.75, 1.5),
+    minWidth: "auto",
     color: theme.palette.text.secondary,
+    textDecoration: "none",
     "&:hover": {
       backgroundColor: alpha(theme.palette.primary.main, 0.08),
       color: theme.palette.primary.light,
@@ -51,6 +54,12 @@ export const useStyles = makeStyles()((theme) => ({
     "&.active": {
       color: theme.palette.primary.main,
       fontWeight: 700,
+    },
+  },
+  navButtonOutlined: {
+    "&.active": {
+      borderColor: theme.palette.primary.main,
+      backgroundColor: alpha(theme.palette.primary.main, 0.04),
     },
   },
   authActionsContainer: {
@@ -79,9 +88,6 @@ export const useStyles = makeStyles()((theme) => ({
   },
   logoutButton: {
     color: theme.palette.secondary.light,
-    "& .MuiButton-startIcon": {
-      marginRight: "100px",
-    },
     "&:hover": {
       backgroundColor: alpha(theme.palette.secondary.main, 0.1),
       color: theme.palette.secondary.main,

@@ -1,15 +1,14 @@
-// src/pages/PagerShop/PagerShopStyles.ts
-import { makeStyles } from "tss-react/mui";
 import { alpha } from "@mui/material/styles";
+import { makeStyles } from "tss-react/mui";
 
 export const useStyles = makeStyles()((theme) => ({
   shopRoot: {
     display: "flex",
     flexDirection: "column",
-    flexGrow: 1, // Allow this page to take available vertical space
+    flexGrow: 1,
     padding: theme.spacing(3),
     gap: theme.spacing(3),
-    backgroundColor: theme.palette.background.default, // Ensure page bg matches theme
+    backgroundColor: theme.palette.background.default,
   },
   pageTitle: {
     textAlign: "center",
@@ -17,20 +16,18 @@ export const useStyles = makeStyles()((theme) => ({
     marginBottom: theme.spacing(1),
   },
   searchAndFilterContainer: {
-    // Container for search and any future filters
     display: "flex",
-    justifyContent: "center", // Center search bar if it's the only item
+    justifyContent: "center",
     alignItems: "center",
-    padding: theme.spacing(1, 0), // Padding top/bottom
+    padding: theme.spacing(1, 0),
     gap: theme.spacing(2),
-    // marginBottom: theme.spacing(2), // Space below search/filter area
   },
   searchField: {
     width: "100%",
-    maxWidth: "600px", // Max width for the search bar
+    maxWidth: "600px",
     "& .MuiOutlinedInput-root": {
-      borderRadius: "25px", // More rounded search bar
-      backgroundColor: alpha(theme.palette.background.paper, 0.7), // Slightly transparent paper bg
+      borderRadius: "25px",
+      backgroundColor: alpha(theme.palette.background.paper, 0.7),
       "& fieldset": {
         borderColor: theme.palette.divider,
       },
@@ -42,14 +39,12 @@ export const useStyles = makeStyles()((theme) => ({
       },
     },
     "& .MuiInputBase-input": {
-      padding: theme.spacing(1.5, 2), // Adjust input padding
+      padding: theme.spacing(1.5, 2),
     },
   },
   cardListOuterContainer: {
-    // This container is to manage the horizontal scroll bar appearance if needed
-    // and to provide padding around the scrolling area.
     width: "100%",
-    overflow: "hidden", // Hides the main scrollbar if cardListContainer handles its own
+    overflow: "hidden",
   },
   cardListContainer: {
     display: "flex",
@@ -67,13 +62,13 @@ export const useStyles = makeStyles()((theme) => ({
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
-    flexGrow: 1, // Take remaining space if no cards
-    minHeight: "300px", // Ensure it's visible
+    flexGrow: 1,
+    minHeight: "300px",
     color: theme.palette.text.secondary,
     gap: theme.spacing(2),
   },
   noResultsText: {
-    padding: theme.spacing(5, 0), // Give some space if no results
+    padding: theme.spacing(5, 0),
     textAlign: "center",
   },
 }));
